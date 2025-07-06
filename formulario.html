@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <!-- Estilos importados desde _css.html -->
+  <?!= HtmlService.createHtmlOutputFromFile('_css.html').getContent(); ?>
+ </head>
+<body>
+  <div class="tab">
+    <button class="tablinks active" onclick="openTab(event, 'entrada')">Entrada</button>
+    <button class="tablinks" onclick="openTab(event, 'salida')">Salida</button>
+    <button class="tablinks" onclick="openTab(event, 'consulta')">Consulta</button>
+  </div>
+
+  <!-- Formulario Entrada -->
+  <div id="entrada" class="tabcontent active">
+    <form id="formEntrada">
+      <fieldset>
+        <legend>Fichero de legajos <br> Entrada</legend>
+        <label for="fechaEntrada">Fecha</label><br>
+        <input id="fechaEntrada" type="date"><br><br>
+        <script>
+          document.getElementById('fechaEntrada').valueAsDate = new Date();
+        </script>
+
+        <label for="numeroLegajoEntrada">Número de legajo</label><br>
+        <input type="number" id="numeroLegajoEntrada"><br><br>
+
+        <label for="credencialEntrada">Credencial</label><br>
+        <input type="number" id="credencialEntrada"><br><br>
+
+        <button type="button" class="guardar" onclick="guardarEntrada()">Guardar</button>
+        <button type="button" class="limpiar" onclick="limpiarFormulario('formEntrada')">Cancelar</button>
+      </fieldset>
+    </form>
+  </div>
+
+  <!-- Formulario Salida -->
+  <div id="salida" class="tabcontent">
+    <form id="formSalida">
+      <fieldset>
+        <legend>Fichero de legajos <br> Salida</legend>
+        <label for="fechaSalida">Fecha</label><br>
+        <input id="fechaSalida" type="date"><br><br>
+        <script>
+          document.getElementById('fechaSalida').valueAsDate = new Date();
+        </script>
+
+        <label for="numeroLegajoSalida">Número de legajo</label><br>
+        <input type="number" id="numeroLegajoSalida"><br><br>
+
+        <label for="divisionSalida">División</label>
+        <select id="divisionSalida">
+          <option>--Seleccione división--</option>
+          <option value="AP">Actuaciones Penitenciarias</option>
+          <option value="JT">Jefatura de Turno</option>
+          <option value="OI">Operativa de Interior</option>
+        </select><br><br>
+
+        <label for="credencialSalida">Credencial</label><br>
+        <input type="number" id="credencialSalida"><br><br>
+
+        <button type="button" class="guardar" onclick="guardarSalida()">Guardar</button>
+        <button type="button" class="limpiar" onclick="limpiarFormulario('formSalida')">Cancelar</button>
+      </fieldset>
+    </form>
+  </div>
+
+  <!-- Formulario Consulta -->
+  <div id="consulta" class="tabcontent">
+    <form id="formConsulta">
+      <fieldset>
+        <legend>Consulta de legajos</legend>
+        <label for="lpuConsulta">Número de legajo</label><br>
+        <input type="text" id="lpuConsulta"><br><br>
+
+        <button type="button" class="guardar" onclick="consultarLegajo()">Consultar</button>
+        <button type="button" class="limpiar" onclick="limpiarFormulario('formConsulta')">Cancelar</button>
+      </fieldset>
+      <div id="resultadoConsulta"></div>
+    </form>
+  </div>
+
+  <div id="notification" style="display:none; position:fixed; top:20px; right:20px; background:#428f37; color:#fff; padding:10px 20px; border-radius:4px; z-index:1000;"></div>
+
+  <!-- Javascript importado desde _js.html -->  
+  <?!= include('_js'); ?>
+</body>
+</html>
