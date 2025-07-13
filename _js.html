@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+  </head>
+  <body>
+      <script>
+      //console.log("_js.html loaded")
+       /** * * * * * * * * * * * * * * * **/
+      // Función para cambiar de pestaña
+      function openTab(evt, tabName) {
+        var i, tabcontent, tablinks;
+        tabcontent = document.getElementsByClassName("tabcontent");
+        for (i = 0; i < tabcontent.length; i++) {
+          tabcontent[i].style.display = "none";
+          tabcontent[i].classList.remove("active");
+        }
+        tablinks = document.getElementsByClassName("tablinks");
+        for (i = 0; i < tablinks.length; i++) {
+          tablinks[i].classList.remove("active");
+        }
+        document.getElementById(tabName).style.display = "block";
+        document.getElementById(tabName).classList.add("active");
+        evt.currentTarget.classList.add("active");
+      }
+
+      // Mostrar solo la pestaña activa al cargar
+      document.addEventListener("DOMContentLoaded", function() {
+        document.getElementById("entrada").style.display = "block";
+      });
+
+      // Limpiar cualquier formulario
+        function limpiarFormulario(formId) {
+        clearAllErrors(formId);
+
+        // Guardar el valor actual de la fecha antes del reset
+        let fechaActual = "";
+        if(formId === "formEntrada") {
+          fechaActual = document.getElementById("fechaEntrada").value;
+        }
+        if(formId === "formSalida") {
+          fechaActual = document.getElementById("fechaSalida").value;
+        }
+
+        document.getElementById(formId).reset();
+
+        // Restaurar el valor de la fecha después del reset
+        if(formId === "formEntrada") {
+          document.getElementById("fechaEntrada").value = fechaActual;
+        }
+        if(formId === "formSalida") {
+          document.getElementById("fechaSalida").value = fechaActual;
+        }
+        if(formId === "formConsulta") {
+          document.getElementById("resultadoConsulta").innerHTML = "";
+        }
+      }
+
+     /** * * * * * * * * * * * * * * * **/
+       // Funciones para llamar a consulta de legajo 
+      function consultarLegajo() {
+        let numeroLegajo = document.getElementById('lpuConsulta').value.trim();
+        
+        // Validación
+        let isValid = true;
+        
+        if (!numeroLegajo || !/^\d{5,6}$/.test(numeroLegajo.toString())) {
+          showError('lpuConsulta', 'Por favor ingrese un número de legajo válido (5-6 dígitos)');
+          isValid = false;
+        }
+        
+        // Si hay errores, no continuar
+        if (!isValid) {
+          return;
+        }
+
+        google.script.run
+        .withSuccessHandler(function(response) {
+           console.log("Respuesta recibida:", response); // Ahora debería mostrar un objeto
+          onConsultaSuccess(response);
+            })
+          .withFailureHandler(function(error) {
+          alert("❌ Error al consultar: " + error.message);
+          })
+         .consultarLegajo(numeroLegajo);
+      }
+     
+        /** 
+        function onConsultaSuccess(response) {
+        const contenedor = document.getElementById('resultadoConsulta');
+        contenedor.innerHTML = '';
+
+        if (!response || !response.success) {
+          contenedor.innerHTML = `<div style="color:red;font-weight:bold;">${response?.message || 'Error en la consulta.'}</div>`;
+          return;
+        }
+
+        contenedor.innerHTML = estadoHTML;
+          // También mostrar stado actual del legajo en el sidebar
+        const estadoHTML = `
+          <div style="background:#f8f9fa;border:1px solid #ccc;padding:15px;margin-bottom:20px;">
+            <h3>Consulta realizada para legajo <strong>${response.numeroLegajo}</strong></h3>
+            <p><strong>Estado:</strong> 
+              <span style="padding:4px 8px;border-radius:3px;color:white;background:${response.estadoActual === 'DEVUELTO' ? '#28a745' : '#ffc107'}">
+                ${response.estadoActual}
+              </span>
+            </p>
+            <p><strong>Última salida:</strong> ${response.ultimoRegistro.fechaSalida} - ${response.ultimoRegistro.division}</p>
+            <button onclick="mostrarDetallesCompletos('${response.numeroLegajo}')" 
+                    style="background:#3f51b5;color:white;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;">
+              Ver detalles completos
+            </button>
+          </div>
+        `;
+        contenedor.insertAdjacentHTML('beforeend', estadoHTML);
+
+        // Tabla con historial
+        let tablaHTML = `
+          <table border="1" cellspacing="0" cellpadding="5" style="width:100%;border-collapse:collapse;">
+            <thead>
+              <tr style="background:#f2f2f2;text-align:center;">
+                <th>Fila</th>
+                <th>Fecha Retiro</th>
+                <th>Cred. Salida</th>
+                <th>División</th>
+                <th>Cred. Entrada</th>
+                <th>Fecha Entrada</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+
+        response.resultados.forEach(registro => {
+          const tieneEntrada = registro.fechaEntrada !== '-';
+          tablaHTML += `
+            <tr style="text-align:center;background:${tieneEntrada ? '#d4edda' : '#fff3cd'};">
+              <td>${registro.fila}</td>
+              <td>${registro.fechaRetiro}</td>
+              <td>${registro.credencialRetira}</td>
+              <td>${registro.division}</td>
+              <td>${registro.credencialEntrada}</td>
+              <td>${registro.fechaEntrada}</td>
+              <td>${tieneEntrada ? 'Devuelto' : 'En uso'}</td>
+            </tr>
+          `;
+        });
+
+        tablaHTML += '</tbody></table>';
+        contenedor.insertAdjacentHTML('beforeend', tablaHTML);
+      }*/
+
+      /** */
+      function onConsultaSuccess(response) {
+    const contenedor = document.getElementById('resultadoConsulta');
+    contenedor.innerHTML = '';
+
+    if (!response || !response.success) {
+        contenedor.innerHTML = `<div style="color:red;font-weight:bold;">${response?.message || 'Error en la consulta.'}</div>`;
+        return;
+    }
+
+    // DECLARAR la variable ANTES de usarla
+    const estadoHTML = `
+        <div style="background:#f8f9fa;border:1px solid #ccc;padding:15px;margin-bottom:20px;">
+            <h3>Consulta realizada para legajo <strong>${response.numeroLegajo}</strong></h3>
+            <p><strong>Estado:</strong> 
+                <span style="padding:4px 8px;border-radius:3px;color:white;background:${response.estadoActual === 'DEVUELTO' ? '#28a745' : '#ffc107'}">
+                    ${response.estadoActual}
+                </span>
+            </p>
+            <p><strong>Última salida:</strong> ${response.ultimoRegistro.fechaSalida} - ${response.ultimoRegistro.division}</p>
+            <button onclick="mostrarDetallesCompletos('${response.numeroLegajo}')" 
+                    style="background:#3f51b5;color:white;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;">
+                Ver detalles completos
+            </button>
+        </div>
+    `;
+
+    // AHORA sí se puede usar la variable
+    contenedor.insertAdjacentHTML('beforeend', estadoHTML);
+
+    // Tabla con historial
+    let tablaHTML = `
+        <table border="1" cellspacing="0" cellpadding="5" style="width:100%;border-collapse:collapse;">
+            <thead>
+                <tr style="background:#f2f2f2;text-align:center;">
+                    <th>Fila</th>
+                    <th>Fecha Retiro</th>
+                    <th>Cred. Salida</th>
+                    <th>División</th>
+                    <th>Cred. Entrada</th>
+                    <th>Fecha Entrada</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    response.resultados.forEach(registro => {
+        const tieneEntrada = registro.fechaEntrada !== '-';
+        tablaHTML += `
+            <tr style="text-align:center;background:${tieneEntrada ? '#d4edda' : '#fff3cd'};">
+                <td>${registro.fila}</td>
+                <td>${registro.fechaRetiro}</td>
+                <td>${registro.credencialRetira}</td>
+                <td>${registro.division}</td>
+                <td>${registro.credencialEntrada}</td>
+                <td>${registro.fechaEntrada}</td>
+                <td>${tieneEntrada ? 'Devuelto' : 'En uso'}</td>
+            </tr>
+        `;
+    });
+
+    tablaHTML += '</tbody></table>';
+    contenedor.insertAdjacentHTML('beforeend', tablaHTML);
+}
+
+
+        function mostrarDetallesCompletos(numeroLegajo) {
+          // Llamar al servidor para que muestre el modal directamente
+          google.script.run
+            .withFailureHandler(error => {
+              alert('Error al mostrar detalles: ' + error.message);
+            })
+            .mostrarModalLegajo(numeroLegajo); // Nueva función en el servidor
+        }
+        /** */
+        // Función auxiliar para formatear fechas en el cliente
+        function formatearFechaParaConsulta(fecha) {
+          if (!fecha) return '';
+          if (typeof fecha === 'string') return fecha;
+          
+          // Convertir de objeto Date a formato dd/mm/yyyy
+          const dia = fecha.getDate().toString().padStart(2, '0');
+          const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
+          const año = fecha.getFullYear();
+          return `${dia}/${mes}/${año}`;
+        }
+
+     /** * * * * * * * * * * * * * * * **/
+      // Funciones para guardar entrada
+      function guardarEntrada() {
+        //console.log("Función guardarEntrada() iniciada");
+        // Capturar valores del formulario
+        let fechaEntrada = document.getElementById('fechaEntrada').value;
+        let numeroLegajo = document.getElementById('numeroLegajoEntrada').value;
+        let credencialEntrada = document.getElementById('credencialEntrada').value;
+        
+      
+        // Validar cada campo
+        let isValid = true;
+        
+        if (!fechaEntrada) {
+          showError('fechaEntrada', 'Por favor, ingrese una fecha de entrada');
+          isValid = false;
+        } else if (new Date(fechaEntrada) > new Date(new Date().toDateString())) {
+          showError('fechaEntrada', 'La fecha de entrada no puede ser posterior a la fecha actual');
+          isValid = false;
+        }
+        
+        if (!numeroLegajo) {
+          showError('numeroLegajoEntrada', 'Por favor, ingrese un número de legajo');
+          isValid = false;
+        } else if (/\./.test(numeroLegajo.toString())) {
+          // Si contiene punto, lo eliminamos
+          numeroLegajo = numeroLegajo.toString().replace(/\./g, '');
+        } else if(numeroLegajo.toString().length < 5 || numeroLegajo.toString().length > 6) {
+          showError('numeroLegajoEntrada', 'El número ingresado debe tener entre 5 y 6 números');
+          isValid = false;
+        }
+        
+        if (!credencialEntrada || credencialEntrada.length != 5) {
+          showError('credencialEntrada', 'Por favor, ingrese una credencial');
+          isValid = false;
+        }
+        
+        // Si hay errores, no continuar
+        if (!isValid) {
+          return;
+        }
+        
+        // Llamar función de Apps Script
+        google.script.run
+          .withSuccessHandler(onEntradaSuccess)
+          .withFailureHandler(onError)
+          .guardarEntrada(fechaEntrada, numeroLegajo, credencialEntrada);
+      }
+
+     // Función de éxito para ENTRADA
+      function onEntradaSuccess(response) {
+        //console.log("onEntradaSuccess()")
+        if (response && response.modal) {
+          google.script.run.mostrarModalReemplazoEntrada(response.datosExistentes, response.datosNuevos, response.filaCoincidente);
+          return;
+        }
+        if (response.success) {
+          showNotification('✅ ' + response.message, 'success');
+          let inputLegajo = document.getElementById('numeroLegajoEntrada');
+          inputLegajo.value = '';
+          inputLegajo.focus();
+        } else {
+          showNotification('❌ ' + response.message, 'error');
+        }
+      }
+
+     /** * * * * * * * * * * * * * * * **/
+      // Funciones para guardar salida
+      function guardarSalida() {
+        //console.log("Función guardarSalida() iniciada");
+
+        // Capturar valores del formulario
+        let fechaSalida = document.getElementById('fechaSalida').value;
+        let numeroLegajo = document.getElementById('numeroLegajoSalida').value;
+        let division = document.getElementById('divisionSalida').value;
+        let credencialSalida = document.getElementById('credencialSalida').value;
+        
+        // Validar cada campo
+        let isValid = true;
+        
+        if (!fechaSalida) {
+          showError('fechaSalida', 'Por favor, ingrese una fecha de salida');
+          isValid = false;
+        } else if (new Date(fechaEntrada) > new Date(new Date().toDateString())) {
+          showError('fechaEntrada', 'La fecha de salida no puede ser posterior a la fecha actual');
+          isValid = false;
+        }
+        
+        if (!numeroLegajo) {
+          showError('numeroLegajoSalida', 'Por favor, ingrese un número de legajo');
+          isValid = false;
+        } else if (/\./.test(numeroLegajo.toString())) {
+          // Si contiene punto, lo eliminamos
+          numeroLegajo = numeroLegajo.toString().replace(/\./g, '');
+        } else if(numeroLegajo.toString().length < 5 || numeroLegajo.toString().length > 6) {
+          showError('numeroLegajoSalida', 'El número ingresado debe tener entre 5 y 6 números');
+          isValid = false;
+        }
+        
+        if (!division || division === '--Seleccione división--') {
+          showError('divisionSalida', 'Por favor, ingrese una división de destino');
+          isValid = false;
+        }
+        
+        if (!credencialSalida || credencialSalida.length != 5) {
+          showError('credencialSalida', 'Por favor, ingrese una credencial');
+          isValid = false;
+        }
+        
+        // Si hay errores, no continuar
+        if (!isValid) {
+          return;
+        }
+        
+        // Llamar función de Apps Script
+        google.script.run
+          .withSuccessHandler(onSalidaSuccess)
+          .withFailureHandler(onError)
+          .guardarSalida(fechaSalida, numeroLegajo, division, credencialSalida);
+      }
+
+    
+      // Función de éxito para SALIDA
+      function onSalidaSuccess(response) {
+        //console.log("onSalidaSuccess()")
+          if (response && response.modal) {
+          google.script.run.mostrarModalReemplazo(response.datosExistentes, response.datosNuevos, response.filaCoincidente);
+          return;
+        }
+
+        if (response.success) {
+          showNotification('✅ ' + response.message, 'success');
+          // Borrar solo legajo y resetear jurisdicción (conserva fecha y credencial)
+          let inputLegajo = document.getElementById('numeroLegajoSalida');
+          inputLegajo.value = '';
+          inputLegajo.focus();
+          } 
+        else {
+          showNotification('❌ ' + response.message, 'error');
+        }
+      }
+
+     /** * * * * * * * * * * * * * * * **/
+      function showNotification(message, type) {
+        let notif = document.getElementById('notification');
+        notif.textContent = message;
+        notif.style.background = type === 'success' ? '#428f37' : '#d32f2f';
+        notif.style.display = 'block';
+        setTimeout(function() {
+          notif.style.display = 'none';
+        }, 2500);
+      }
+
+      // Manejador de errores
+      function onError(error) {
+        alert('❌ Error: ' + error.message);
+      }
+
+      document.addEventListener('DOMContentLoaded', function() {
+      // Para Entrada
+      document.getElementById('formEntrada').addEventListener('keydown', function(event) {
+        if (event.key === 'Enter' && isTabActive('entrada')) {
+          event.preventDefault();
+          guardarEntrada();
+        }
+      });
+
+      // Para Salida
+      document.getElementById('formSalida').addEventListener('keydown', function(event) {
+        if (event.key === 'Enter' && isTabActive('salida')) {
+          event.preventDefault();
+          guardarSalida();
+        }
+      });
+
+      // Para Consulta
+      document.getElementById('formConsulta').addEventListener('keydown', function(event) {
+        if (event.key === 'Enter' && isTabActive('consulta')) {
+          event.preventDefault();
+          consultarLegajo();
+        }
+      });
+    });
+
+     /** * * * * * * * * * * * * * * * **/
+      // Función para mostrar errores
+      function showError(fieldId, message) {
+        const field = document.getElementById(fieldId);
+        const errorDiv = document.getElementById(fieldId + '-error');
+        
+        // Mostrar mensaje de error
+        errorDiv.textContent = message;
+        errorDiv.classList.add('active');
+        
+        // Agregar clase de error al input
+        field.classList.add('input-error');
+        field.classList.remove('input-success');
+        
+        // Enfocar el primer campo con error
+        if (!document.querySelector('.input-error')) {
+          field.focus();
+        }
+      }
+
+      // Función para limpiar todos los errores
+      function clearAllErrors() {
+        const errorMessages = document.querySelectorAll('.error-message');
+        const inputs = document.querySelectorAll('#formEntrada input, #formSalida input, #formSalida select, #formConsulta input');
+
+        
+        errorMessages.forEach(error => {
+          error.classList.remove('active');
+          error.textContent = '';
+        });
+        
+        inputs.forEach(input => {
+          input.classList.remove('input-error', 'input-success');
+        });
+      }
+
+      /** Ocultar los mensajes de errores al ingresar datos */
+       document.addEventListener('DOMContentLoaded', function() {
+        // Selecciona todos los campos relevantes
+        const campos = document.querySelectorAll(
+          '#formEntrada input, #formSalida input, #formEntrada select, #formSalida select, #formConsulta input'
+        );
+        campos.forEach(field => {
+          ['blur', 'input', 'change'].forEach(evento => {
+            field.addEventListener(evento, function() {
+              if (this.classList.contains('input-error') && this.value.trim() !== '') {
+                const errorDiv = document.getElementById(this.id + '-error');
+                errorDiv.classList.remove('active');
+                errorDiv.textContent = '';
+                this.classList.remove('input-error');
+                this.classList.add('input-success');
+              }
+            });
+          });
+        });
+      });
+
+     /** * * * * * * * * * * * * * * * **/
+    // Función para verificar si un tab está activo
+    function isTabActive(tabId) {
+      var tab = document.getElementById(tabId);
+      return tab && tab.classList.contains('active') && tab.style.display !== 'none';
+    }
+    </script>
+  </body>
+</html>

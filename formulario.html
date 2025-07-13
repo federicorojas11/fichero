@@ -13,41 +13,53 @@
   </div>
 
   <!-- Formulario Entrada -->
-  <div id="entrada" class="tabcontent active">
-    <form id="formEntrada">
-      <fieldset>
-        <legend>Fichero de legajos <br> Entrada</legend>
-        <label for="fechaEntrada">Fecha</label><br>
-        <input id="fechaEntrada" type="date"><br><br>
-        <script>
-          document.getElementById('fechaEntrada').valueAsDate = new Date();
-        </script>
+<div id="entrada" class="tabcontent active">
+  <form id="formEntrada">
+    <fieldset>
+      <legend>Fichero de legajos <br> Entrada</legend>
+      
+      <label for="fechaEntrada">Fecha</label>
+      <input id="fechaEntrada" type="date"><br>
+      <div class="error-message" id="fechaEntrada-error"></div>
+      <br>
+      <script>
+        document.getElementById('fechaEntrada').valueAsDate = new Date();
+      </script>
 
-        <label for="numeroLegajoEntrada">Número de legajo</label><br>
-        <input type="number" id="numeroLegajoEntrada"><br><br>
+      <label for="numeroLegajoEntrada">Número de legajo</label>
+      <input type="number" id="numeroLegajoEntrada"><br>
+      <div class="error-message" id="numeroLegajoEntrada-error"></div>
+      <br>
+      <label for="credencialEntrada">Credencial</label>
+      <input type="number" id="credencialEntrada"><br>
+      <div class="error-message" id="credencialEntrada-error"></div>
+      <br>
+      <button type="button" class="guardar" onclick="guardarEntrada()">Guardar</button>
+      <button type="button" class="limpiar" onclick="limpiarFormulario('formEntrada')">Cancelar</button>
+    </fieldset>
+  </form>
+</div>
 
-        <label for="credencialEntrada">Credencial</label><br>
-        <input type="number" id="credencialEntrada"><br><br>
-
-        <button type="button" class="guardar" onclick="guardarEntrada()">Guardar</button>
-        <button type="button" class="limpiar" onclick="limpiarFormulario('formEntrada')">Cancelar</button>
-      </fieldset>
-    </form>
-  </div>
 
   <!-- Formulario Salida -->
   <div id="salida" class="tabcontent">
     <form id="formSalida">
       <fieldset>
         <legend>Fichero de legajos <br> Salida</legend>
-        <label for="fechaSalida">Fecha</label><br>
-        <input id="fechaSalida" type="date"><br><br>
+        <label for="fechaSalida">Fecha</label>
+        <input id="fechaSalida" type="date">
         <script>
           document.getElementById('fechaSalida').valueAsDate = new Date();
         </script>
+        <br>
+        <div class="error-message" id="fechaSalida-error"></div>
+        <br>
 
-        <label for="numeroLegajoSalida">Número de legajo</label><br>
-        <input type="number" id="numeroLegajoSalida"><br><br>
+
+        <label for="numeroLegajoSalida">Número de legajo</label>
+        <input type="number" id="numeroLegajoSalida"><br>
+        <div class="error-message" id="numeroLegajoSalida-error"></div>
+        <br>
 
         <label for="divisionSalida">División</label>
         <select id="divisionSalida">
@@ -55,11 +67,15 @@
           <option value="AP">Actuaciones Penitenciarias</option>
           <option value="JT">Jefatura de Turno</option>
           <option value="OI">Operativa de Interior</option>
-        </select><br><br>
+        </select><br>
+        <div class="error-message" id="divisionSalida-error"></div>
+        <br>
 
-        <label for="credencialSalida">Credencial</label><br>
-        <input type="number" id="credencialSalida"><br><br>
-
+        <label for="credencialSalida">Credencial</label>
+        <input type="number" id="credencialSalida"><br>
+        <div class="error-message" id="credencialSalida-error"></div>
+        <br>
+        
         <button type="button" class="guardar" onclick="guardarSalida()">Guardar</button>
         <button type="button" class="limpiar" onclick="limpiarFormulario('formSalida')">Cancelar</button>
       </fieldset>
@@ -72,7 +88,9 @@
       <fieldset>
         <legend>Consulta de legajos</legend>
         <label for="lpuConsulta">Número de legajo</label><br>
-        <input type="text" id="lpuConsulta"><br><br>
+        <input type="text" id="lpuConsulta"><br>
+        <div class="error-message" id="lpuConsulta-error"></div>
+        <br>
 
         <button type="button" class="guardar" onclick="consultarLegajo()">Consultar</button>
         <button type="button" class="limpiar" onclick="limpiarFormulario('formConsulta')">Cancelar</button>
@@ -83,7 +101,25 @@
 
   <div id="notification" style="display:none; position:fixed; top:20px; right:20px; background:#428f37; color:#fff; padding:10px 20px; border-radius:4px; z-index:1000;"></div>
 
+  <!-- Modal para mostrar al encontrar resultados -->
+  <div id="estadoModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Estado Actual del Legajo</h2>
+        <span class="close">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div id="estadoContent">
+          <!-- Contenido dinámico se insertará aquí -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-close">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Javascript importado desde _js.html -->  
-  <?!= include('_js'); ?>
+  <?!= HtmlService.createHtmlOutputFromFile('_js').getContent(); ?>
 </body>
 </html>
