@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+     <script>
+      // Gestor del loader de notificación
+const LoaderNotification = {
+    // Muestra el loader con un mensaje personalizado
+    show: function(message = 'Procesando datos...') {
+        const loader = document.getElementById('loader-notification');
+        const messageElement = document.getElementById('loaderMessage');
+        
+        messageElement.textContent = message;
+        loader.classList.add('show');
+    },
+    
+    // Oculta el loader
+    hide: function() {
+        const loader = document.getElementById('loader-notification');
+        loader.classList.remove('show');
+    }
+};
+    </script>
+
+    <style>
+      /* Loader de notificación centrado */
+      #loader-notification {
+          position: fixed;
+          bottom: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          background: #ffffff;
+          color: #333;
+          padding: 15px 25px;
+          border-radius: 8px;
+          z-index: 10000;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 15px;
+          border: 1px solid #e0e0e0;
+          min-width: 250px;
+          max-width: 90%;
+          opacity: 0;
+          visibility: hidden;
+          transition: all 0.3s ease;
+      }
+
+      #loader-notification.show {
+          opacity: 1;
+          visibility: visible;
+      }
+
+      .loader-content {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+      }
+
+      .loader-spinner {
+          width: 24px;
+          height: 24px;
+          border: 3px solid rgba(66, 133, 244, 0.2);
+          border-radius: 50%;
+          border-top-color: #4285F4;
+          animation: spin 1s ease-in-out infinite;
+      }
+
+      .loader-text {
+          font-size: 15px;
+          font-weight: 500;
+          color: #333;
+      }
+
+      @keyframes spin {
+          to { transform: rotate(360deg); }
+      }
+    </style>
+  </head>
+  <body>
+   
+  </body>
+</html>

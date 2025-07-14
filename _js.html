@@ -29,6 +29,7 @@
         document.getElementById("entrada").style.display = "block";
       });
 
+    
       // Limpiar cualquier formulario
         function limpiarFormulario(formId) {
         clearAllErrors(formId);
@@ -58,7 +59,7 @@
 
      /** * * * * * * * * * * * * * * * **/
        // Funciones para llamar a consulta de legajo 
-      function consultarLegajo() {
+      function consultarLegajo() {  
         let numeroLegajo = document.getElementById('lpuConsulta').value.trim();
         
         // Validación
@@ -74,83 +75,20 @@
           return;
         }
 
+        LoaderManager.showCircularLoader('Consultando...');
         google.script.run
         .withSuccessHandler(function(response) {
-           console.log("Respuesta recibida:", response); // Ahora debería mostrar un objeto
+          LoaderManager.hideLoaders();
           onConsultaSuccess(response);
             })
           .withFailureHandler(function(error) {
+          LoaderManager.hideLoaders();
           alert("❌ Error al consultar: " + error.message);
           })
          .consultarLegajo(numeroLegajo);
       }
-     
-        /** 
-        function onConsultaSuccess(response) {
-        const contenedor = document.getElementById('resultadoConsulta');
-        contenedor.innerHTML = '';
 
-        if (!response || !response.success) {
-          contenedor.innerHTML = `<div style="color:red;font-weight:bold;">${response?.message || 'Error en la consulta.'}</div>`;
-          return;
-        }
-
-        contenedor.innerHTML = estadoHTML;
-          // También mostrar stado actual del legajo en el sidebar
-        const estadoHTML = `
-          <div style="background:#f8f9fa;border:1px solid #ccc;padding:15px;margin-bottom:20px;">
-            <h3>Consulta realizada para legajo <strong>${response.numeroLegajo}</strong></h3>
-            <p><strong>Estado:</strong> 
-              <span style="padding:4px 8px;border-radius:3px;color:white;background:${response.estadoActual === 'DEVUELTO' ? '#28a745' : '#ffc107'}">
-                ${response.estadoActual}
-              </span>
-            </p>
-            <p><strong>Última salida:</strong> ${response.ultimoRegistro.fechaSalida} - ${response.ultimoRegistro.division}</p>
-            <button onclick="mostrarDetallesCompletos('${response.numeroLegajo}')" 
-                    style="background:#3f51b5;color:white;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;">
-              Ver detalles completos
-            </button>
-          </div>
-        `;
-        contenedor.insertAdjacentHTML('beforeend', estadoHTML);
-
-        // Tabla con historial
-        let tablaHTML = `
-          <table border="1" cellspacing="0" cellpadding="5" style="width:100%;border-collapse:collapse;">
-            <thead>
-              <tr style="background:#f2f2f2;text-align:center;">
-                <th>Fila</th>
-                <th>Fecha Retiro</th>
-                <th>Cred. Salida</th>
-                <th>División</th>
-                <th>Cred. Entrada</th>
-                <th>Fecha Entrada</th>
-                <th>Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-        `;
-
-        response.resultados.forEach(registro => {
-          const tieneEntrada = registro.fechaEntrada !== '-';
-          tablaHTML += `
-            <tr style="text-align:center;background:${tieneEntrada ? '#d4edda' : '#fff3cd'};">
-              <td>${registro.fila}</td>
-              <td>${registro.fechaRetiro}</td>
-              <td>${registro.credencialRetira}</td>
-              <td>${registro.division}</td>
-              <td>${registro.credencialEntrada}</td>
-              <td>${registro.fechaEntrada}</td>
-              <td>${tieneEntrada ? 'Devuelto' : 'En uso'}</td>
-            </tr>
-          `;
-        });
-
-        tablaHTML += '</tbody></table>';
-        contenedor.insertAdjacentHTML('beforeend', tablaHTML);
-      }*/
-
-      /** */
+      /** * * * * * * * * * * * * * * * * */
       function onConsultaSuccess(response) {
     const contenedor = document.getElementById('resultadoConsulta');
     contenedor.innerHTML = '';
@@ -160,7 +98,6 @@
         return;
     }
 
-    // DECLARAR la variable ANTES de usarla
     const estadoHTML = `
         <div style="background:#f8f9fa;border:1px solid #ccc;padding:15px;margin-bottom:20px;">
             <h3>Consulta realizada para legajo <strong>${response.numeroLegajo}</strong></h3>
@@ -280,6 +217,10 @@
           return;
         }
         
+        LoaderNotification.show('Guardando datos de entrada...');
+        let inputLegajo = document.getElementById('numeroLegajoEntrada');
+        inputLegajo.value = '';
+        inputLegajo.focus();
         // Llamar función de Apps Script
         google.script.run
           .withSuccessHandler(onEntradaSuccess)
@@ -289,16 +230,13 @@
 
      // Función de éxito para ENTRADA
       function onEntradaSuccess(response) {
-        //console.log("onEntradaSuccess()")
+        LoaderNotification.hide();
         if (response && response.modal) {
           google.script.run.mostrarModalReemplazoEntrada(response.datosExistentes, response.datosNuevos, response.filaCoincidente);
           return;
         }
         if (response.success) {
           showNotification('✅ ' + response.message, 'success');
-          let inputLegajo = document.getElementById('numeroLegajoEntrada');
-          inputLegajo.value = '';
-          inputLegajo.focus();
         } else {
           showNotification('❌ ' + response.message, 'error');
         }
@@ -351,7 +289,11 @@
         if (!isValid) {
           return;
         }
-        
+
+       LoaderNotification.show('Guardando datos de salida...');
+        let inputLegajo = document.getElementById('numeroLegajoEntrada');
+        inputLegajo.value = '';
+        inputLegajo.focus();
         // Llamar función de Apps Script
         google.script.run
           .withSuccessHandler(onSalidaSuccess)
@@ -362,6 +304,7 @@
     
       // Función de éxito para SALIDA
       function onSalidaSuccess(response) {
+        LoaderNotification.hide();
         //console.log("onSalidaSuccess()")
           if (response && response.modal) {
           google.script.run.mostrarModalReemplazo(response.datosExistentes, response.datosNuevos, response.filaCoincidente);

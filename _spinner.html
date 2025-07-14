@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <script>
+        // Objeto para manejar la visualización de los loaders
+      const LoaderManager = {
+        // Muestra el loader circular con overlay y mensaje opcional
+        showCircularLoader: function(mensaje = 'Procesando datos...') {
+          const overlay = document.getElementById('loader-overlay');
+          const text = overlay.querySelector('.loader-text');
+          text.textContent = mensaje;
+          overlay.style.display = 'flex';
+          overlay.classList.add('fade-in');
+          // Evita que el usuario haga scroll mientras el loader está activo
+          document.body.style.overflow = 'hidden';
+        },
+
+        // Muestra el loader lineal (barra superior)
+        showLinearLoader: function() {
+          const loader = document.getElementById('linear-loader');
+          loader.style.display = 'block';
+          loader.classList.add('fade-in');
+        },
+
+        // Oculta ambos loaders (circular y lineal)
+        hideLoaders: function() {
+          const overlay = document.getElementById('loader-overlay');
+          const linear = document.getElementById('linear-loader');
+          // Agrega animación de salida
+          overlay.classList.remove('fade-in');
+          overlay.classList.add('fade-out');
+          linear.classList.remove('fade-in');
+          linear.classList.add('fade-out');
+          // Oculta después de la animación (300ms)
+          setTimeout(() => {
+            overlay.style.display = 'none';
+            linear.style.display = 'none';
+            overlay.classList.remove('fade-out');
+            linear.classList.remove('fade-out');
+            document.body.style.overflow = 'auto';
+          }, 300);
+        }
+      };
+    </script>
+    <style>
+      /** LOADER */
+      /* Main overlay styles */
+      .loader-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(2px);
+        z-index: 9999;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        transition: opacity 0.3s ease-in-out;
+      }
+
+      .loader-container {
+        text-align: center;
+        padding: 20px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        min-width: 120px;
+      }
+
+      /* Circular Progress Loader */
+      .loader-circular {
+        width: 60px;
+        height: 60px;
+        margin: 0 auto 16px;
+        position: relative;
+      }
+
+      .circular-svg {
+        width: 100%;
+        height: 100%;
+        animation: rotate 2s linear infinite;
+      }
+
+      .path {
+        animation: dash 1.5s ease-in-out infinite;
+        stroke-linecap: round;
+        transition: stroke-dasharray 0.3s ease-in-out;
+      }
+
+      /* Keyframe animations */
+      @keyframes rotate {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      @keyframes dash {
+        0% {
+          stroke-dasharray: 1, 150;
+          stroke-dashoffset: 0;
+        }
+        50% {
+          stroke-dasharray: 90, 150;
+          stroke-dashoffset: -35;
+        }
+        100% {
+          stroke-dasharray: 90, 150;
+          stroke-dashoffset: -124;
+        }
+      }
+
+      /* Loading text styles */
+      .loader-text {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        font-size: 14px;
+        color: #666;
+        margin-top: 8px;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+      }
+
+      /* Alternative Linear Progress Loader */
+      .linear-loader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        z-index: 9999;
+        background: rgba(25, 118, 210, 0.1);
+      }
+
+      .linear-progress {
+        height: 100%;
+        overflow: hidden;
+        background: #e3f2fd;
+        position: relative;
+      }
+
+      .linear-progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #1976d2, #42a5f5);
+        animation: linear-progress 2s ease-in-out infinite;
+        transform-origin: left;
+      }
+
+      @keyframes linear-progress {
+        0% {
+          transform: scaleX(0);
+          transform-origin: left;
+        }
+        50% {
+          transform: scaleX(0.7);
+          transform-origin: left;
+        }
+        100% {
+          transform: scaleX(1);
+          transform-origin: right;
+        }
+      }
+
+      /* Fade animations */
+      .fade-in {
+        opacity: 0;
+        animation: fadeIn 0.3s ease-in-out forwards;
+      }
+
+      .fade-out {
+        opacity: 1;
+        animation: fadeOut 0.3s ease-in-out forwards;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: scale(0.95);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      @keyframes fadeOut {
+        from {
+          opacity: 1;
+          transform: scale(1);
+        }
+        to {
+          opacity: 0;
+          transform: scale(0.95);
+        }
+      }
+
+      /* Responsive adjustments */
+      @media (max-width: 480px) {
+        .loader-container {
+          min-width: 100px;
+          padding: 16px;
+        }
+        
+        .loader-circular {
+          width: 50px;
+          height: 50px;
+        }
+        
+        .loader-text {
+          font-size: 12px;
+        }
+      }
+
+      /* Accessibility improvements */
+      @media (prefers-reduced-motion: reduce) {
+        .loader-overlay,
+        .circular-svg,
+        .path,
+        .linear-progress-bar {
+          animation-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    
+  </body>
+</html>

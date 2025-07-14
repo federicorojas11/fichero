@@ -3,7 +3,7 @@
 <head>
   <base target="_top">
   <!-- Estilos importados desde _css.html -->
-  <?!= HtmlService.createHtmlOutputFromFile('_css.html').getContent(); ?>
+  <?!= include('_css'); ?>
  </head>
 <body>
   <div class="tab">
@@ -99,7 +99,29 @@
     </form>
   </div>
 
-  <div id="notification" style="display:none; position:fixed; top:20px; right:20px; background:#428f37; color:#fff; padding:10px 20px; border-radius:4px; z-index:1000;"></div>
+  <div id="notification" style="display:none; position:fixed; bottom:20px; right:20px; background:#428f37; color:#fff; padding:10px 20px; border-radius:4px; z-index:1000;"></div>
+
+  <!-- Main loader container with overlay -->
+  <div id="loader-overlay" class="loader-overlay" style="display: none;">
+    <div class="loader-container">
+      <!-- Circular Progress Loader (Primary) -->
+      <div class="loader-circular">
+        <svg viewBox="0 0 50 50" class="circular-svg">
+          <circle cx="25" cy="25" r="20" fill="none" stroke="#1976d2" stroke-width="3" stroke-linecap="round" stroke-dasharray="125.6" stroke-dashoffset="125.6" class="path"></circle>
+        </svg>
+      </div>
+      
+      <!-- Loading text -->
+      <div class="loader-text">Procesando datos...</div>
+    </div>
+  </div>
+
+  <!-- Alternative Linear Progress Loader -->
+  <div id="linear-loader" class="linear-loader" style="display: none;">
+    <div class="linear-progress">
+      <div class="linear-progress-bar"></div>
+    </div>
+  </div>
 
   <!-- Modal para mostrar al encontrar resultados -->
   <div id="estadoModal" class="modal">
@@ -119,7 +141,17 @@
     </div>
   </div>
 
-  <!-- Javascript importado desde _js.html -->  
-  <?!= HtmlService.createHtmlOutputFromFile('_js').getContent(); ?>
+  <!-- Loader de notificación -->
+  <div id="loader-notification">
+    <div class="loader-content">
+      <div class="loader-spinner"></div>
+      <div class="loader-text" id="loaderMessage">Procesando datos...</div>
+    </div>
+  </div>
+
+  <!-- Javascript y css importados -->  
+  <?!= include('_js'); ?>
+  <?!= include('_spinner'); ?>
+  <?!= include('_spinner_notification'); ?>
 </body>
 </html>
