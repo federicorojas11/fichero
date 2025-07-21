@@ -3,10 +3,10 @@
 // ==========================================
 function consultarLegajo(numeroLegajo) {
   try {
-    const hoja = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Datos");
 
     if (!hoja) {
-      throw new Error('No se pudo acceder a la hoja de cálculo activa');
+      throw new Error('No se pudo acceder a la hoja de cálculo');
     }
     
     const datos = hoja.getDataRange().getValues();
@@ -130,288 +130,6 @@ function convertirFecha(fecha) {
   return null;
 }
 
-
-/** function mostrarModalEstado(response) {
-  const htmlTemplate = `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <base target="_top">
-        <style>
-          body {
-            font-family: 'Roboto', Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background: #f5f5f5;
-            color: #333;
-          }
-          .container {
-            max-width: 900px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            overflow: hidden;
-          }
-          .header {
-            padding: 20px;
-            background: #3f51b5;
-            color: white;
-            display: flex;
-            align-items: center;
-          }
-          .header-icon {
-            font-size: 36px;
-            margin-right: 15px;
-          }
-          .header-content h1 {
-            margin: 0;
-            font-size: 24px;
-            font-weight: 500;
-          }
-          .header-content p {
-            margin: 5px 0 0;
-            opacity: 0.9;
-          }
-          .estado-section {
-            padding: 25px;
-          }
-          .estado-card {
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
-            margin-bottom: 25px;
-          }
-          .estado-header {
-            padding: 20px;
-            color: white;
-            display: flex;
-            align-items: center;
-            font-size: 20px;
-          }
-          .estado-icon {
-            margin-right: 15px;
-            font-size: 32px;
-          }
-          .estado-body {
-            padding: 20px;
-          }
-          .estado-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 16px;
-          }
-          .estado-table th {
-            text-align: left;
-            padding: 12px 0;
-            width: 40%;
-            color: #616161;
-            font-weight: 500;
-          }
-          .estado-table td {
-            padding: 12px 0;
-            font-weight: 400;
-            font-size: 17px;
-          }
-          .historial-section {
-            padding: 20px;
-          }
-          .historial-title {
-            margin-top: 0;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #3f51b5;
-            color: #3f51b5;
-          }
-          .historial-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 14px;
-          }
-          .historial-table th {
-            background-color: #3f51b5;
-            color: white;
-            padding: 12px 15px;
-            text-align: left;
-          }
-          .historial-table td {
-            padding: 10px 15px;
-            border-bottom: 1px solid #eee;
-          }
-          .historial-table tr:nth-child(even) {
-            background-color: #f9f9f9;
-          }
-          .btn-cerrar {
-            display: block;
-            margin: 20px auto;
-            padding: 12px 30px;
-            background: #3f51b5;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: background 0.3s;
-          }
-          .btn-cerrar:hover {
-            background: #303f9f;
-          }
-          
-          /* Colores de estado *//**
-          .estado-en-archivo .estado-header {
-            background-color: #4caf50;
-          }
-          .estado-en-salida .estado-header {
-            background-color: #ff9800;
-          }
-          .estado-no-registrado .estado-header {
-            background-color: #f44336;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <div class="header-icon">📋</div>
-            <div class="header-content">
-              <h1>Estado del Legajo</h1>
-              <p>Consulta realizada: <?= new Date().toLocaleString() ?></p>
-            </div>
-          </div>
-          
-          <div class="estado-section">
-            <? const estadoClass = response.estado === "EN ARCHIVO" ? 'estado-en-archivo' : 
-                                 response.estado === "EN SALIDA" ? 'estado-en-salida' : 
-                                 'estado-no-registrado' ?>
-            <? const estadoIcon = response.estado === "EN ARCHIVO" ? '📁' : 
-                              response.estado === "EN SALIDA" ? '🚶' : '❓' ?>
-            <? const estadoText = response.estado === "EN ARCHIVO" ? 'En Archivo' : 
-                              response.estado === "EN SALIDA" ? 'En Salida' : 'No Registrado' ?>
-            
-            <div class="estado-card <?= estadoClass ?>">
-              <div class="estado-header">
-                <span class="estado-icon"><?= estadoIcon ?></span>
-                <h3><?= estadoText ?></h3>
-              </div>
-              <div class="estado-body">
-                <table class="estado-table">
-                  <tr>
-                    <th>Número de Legajo</th>
-                    <td><?= response.numeroLegajo ?></td>
-                  </tr>
-                  <? if (response.estado !== "NO REGISTRADO") { ?>
-                    <tr>
-                      <th>Fecha de Salida</th>
-                      <td><?= formatDate(response.ultimoRegistro.fechaSalida) ?></td>
-                    </tr>
-                    <tr>
-                      <th>División</th>
-                      <td><?= response.ultimoRegistro.division ?></td>
-                    </tr>
-                    <tr>
-                      <th>Retirado por</th>
-                      <td><?= response.ultimoRegistro.credencialRetira ?></td>
-                    </tr>
-                    <? if (response.estado === "EN ARCHIVO") { ?>
-                      <tr>
-                        <th>Fecha de Entrada</th>
-                        <td><?= formatDate(response.ultimoRegistro.fechaEntrada) ?></td>
-                      </tr>
-                      <tr>
-                        <th>Recibido por</th>
-                        <td><?= response.ultimoRegistro.credencialEntrada ?></td>
-                      </tr>
-                    <? } ?>
-                  <? } else { ?>
-                    <tr>
-                      <td colspan="2" style="text-align:center;padding:20px 0;">
-                        El legajo no se encuentra en el sistema
-                      </td>
-                    </tr>
-                  <? } ?>
-                </table>
-              </div>
-            </div>
-          </div>
-          
-          <? if (response.historial && response.historial.length > 0) { ?>
-            <div class="historial-section">
-              <h3 class="historial-title">Historial Completo</h3>
-              <table class="historial-table">
-                <thead>
-                  <tr>
-                    <th>Fecha Salida</th>
-                    <th>División</th>
-                    <th>Retiró</th>
-                    <th>Fecha Entrada</th>
-                    <th>Recibió</th>
-                    <th>Estado</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <? for (let i = 0; i < response.historial.length; i++) { ?>
-                    <? const reg = response.historial[i] ?>
-                    <? const tieneEntrada = reg.fechaEntrada && reg.fechaEntrada !== '-' ?>
-                    <tr>
-                      <td><?= formatDate(reg.fechaSalida) ?></td>
-                      <td><?= reg.division ?></td>
-                      <td><?= reg.credencialRetira ?></td>
-                      <td><?= tieneEntrada ? formatDate(reg.fechaEntrada) : '-' ?></td>
-                      <td><?= tieneEntrada ? reg.credencialEntrada : '-' ?></td>
-                      <td><?= tieneEntrada ? 'Devuelto' : 'En uso' ?></td>
-                    </tr>
-                  <? } ?>
-                </tbody>
-              </table>
-            </div>
-          <? } ?>
-          
-          <button class="btn-cerrar" onclick="google.script.host.close()">Cerrar</button>
-        </div>
-        
-        <script>
-          // Función para formatear fechas
-          function formatDate(date) {
-            if (!date) return '';
-            if (typeof date === 'string') return date;
-            try {
-              const d = new Date(date);
-              return d.toLocaleDateString('es-AR');
-            } catch(e) {
-              return date.toString();
-            }
-          }
-          
-          // Aplicar formato a todas las fechas en la tabla
-          document.addEventListener('DOMContentLoaded', function() {
-            const dateCells = document.querySelectorAll('td');
-            dateCells.forEach(cell => {
-              if (cell.textContent.match(/\d{1,2}\/\d{1,2}\/\d{4}/)) {
-                cell.textContent = formatDate(cell.textContent);
-              }
-            });
-          });
-        </script>
-      </body>
-    </html>
-  `;
-
-  // Procesar el template
-  const html = HtmlService.createTemplate(htmlTemplate);
-  html.response = response;
-  html.formatDate = function(date) {
-    if (!date) return '';
-    try {
-      if (typeof date === 'string' && date.includes('/')) return date;
-      const d = new Date(date);
-      return d.toLocaleDateString('es-AR');
-    } catch(e) {
-      return date.toString();
-    }
-  };
-  
-  return html.evaluate().getContent();
-}*/
-
 function generarModalDetalles(numeroLegajo) {
   // Primero obtener los datos nuevamente
   const response = consultarLegajo(numeroLegajo);
@@ -427,7 +145,6 @@ function generarModalDetalles(numeroLegajo) {
       <head>
         <base target="_top">
         <style>
-          /* Todos los estilos CSS que estaban antes */
            <style>
           body {
             font-family: 'Roboto', Arial, sans-serif;
@@ -494,13 +211,13 @@ function generarModalDetalles(numeroLegajo) {
           }
           .estado-table th {
             text-align: left;
-            padding: 12px 0;
+            padding: 7px 12px;
             width: 40%;
             color: #616161;
             font-weight: 500;
           }
           .estado-table td {
-            padding: 12px 0;
+            padding: 7px 12px;
             font-weight: 400;
             font-size: 17px;
           }
@@ -557,13 +274,10 @@ function generarModalDetalles(numeroLegajo) {
           .estado-no-registrado .estado-header {
             background-color: #f44336;
           }
-          /* ... (copiar todos los estilos CSS anteriores) ... */
         </style>
       </head>
       <body>
-        <div class="container">
-          <!-- Todo el contenido HTML que estaba antes -->
-          
+        <div class="container">        
           <div class="header">
             <div class="header-icon">📋</div>
             <div class="header-content">
@@ -658,7 +372,6 @@ function generarModalDetalles(numeroLegajo) {
               </table>
             </div>
           <? } ?>
-          
           ${generarContenidoModal(response)}
           <button onclick="google.script.host.close()" class="btn-cerrar">Cerrar</button>
         </div>
@@ -668,24 +381,6 @@ function generarModalDetalles(numeroLegajo) {
   
   return html;
 }
-
-/*function generarContenidoModal(response) {
-  // Generar el contenido dinámico del modal
-  let html = `
-    <div class="header">
-      <div class="header-icon">📋</div>
-      <div class="header-content">
-        <h1>Estado del Legajo ${response.numeroLegajo}</h1>
-        <p>Consulta realizada: ${new Date().toLocaleString()}</p>
-      </div>
-    </div>
-  `;
-  
-  // ... (continuar con el resto del contenido como antes) ...
-  
-  return html;
-}*/
-
 function mostrarModalLegajo(numeroLegajo) {
   const response = consultarLegajo(numeroLegajo);
   
@@ -718,21 +413,164 @@ function generarHtmlModal(response) {
       <head>
         <base target="_top">
         <style>
-          body {
+            body {
             font-family: 'Roboto', Arial, sans-serif;
             margin: 0;
             padding: 20px;
-            background: #f5f5f5;
+            background: #e0e0e0;
+            color: #333;
           }
+
           .container {
             max-width: 900px;
             margin: 0 auto;
             background: white;
-            border-radius: 10px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+            overflow: hidden;
+            padding: 20px;
+          }
+
+          /* Encabezado principal */
+          .header {
+            padding: 20px;
+            background: #3f51b5;
+            color: white;
+            display: flex;
+            align-items: center;
+            border-radius: 8px 8px 0 0;
+            margin-bottom: 20px;
+          }
+
+          .header-icon {
+            font-size: 36px;
+            margin-right: 15px;
+          }
+
+          .header-content h1 {
+            margin: 0;
+            font-size: 26px;
+          }
+
+          .header-content p {
+            margin: 5px 0 0;
+            opacity: 0.9;
+            font-size: 14px;
+          }
+
+          /* Sección de estado */
+          .estado-card {
+            margin-bottom: 30px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
             overflow: hidden;
           }
-          /* ... (copiar todos los estilos CSS anteriores) ... */
+
+          .estado-header {
+            background-color: #444;
+            color: white;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+          }
+
+          .estado-icon {
+            font-size: 28px;
+            margin-right: 15px;
+          }
+
+          .estado-header h3 {
+            margin: 0;
+            font-size: 20px;
+          }
+
+          .estado-body {
+            padding: 20px;
+            background-color: #fafafa;
+          }
+
+          .estado-table {
+            width: 100%;
+            border-collapse: collapse;
+          }
+
+          .estado-table th,
+          .estado-table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #ddd;
+            font-size: 15px;
+            text-align: left;
+          }
+
+          .estado-table th {
+            background-color: #f5f5f5;
+            color: #444;
+          }
+
+          /* Colores según estado */
+          .estado-en-archivo .estado-header {
+            background-color: #4caf50;
+          }
+
+          .estado-en-salida .estado-header {
+            background-color: #ff9800;
+          }
+
+          .estado-no-registrado .estado-header {
+            background-color: #f44336;
+          }
+
+          /* Sección historial */
+          .historial-section {
+            padding: 20px;
+            background-color: #fdfdfd;
+            border-radius: 8px;
+            box-shadow: inset 0 0 0 1px #ddd;
+          }
+
+          .historial-title {
+            margin-top: 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3f51b5;
+            color: #3f51b5;
+            font-size: 20px;
+          }
+
+          .historial-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            text-align: center;
+          }
+
+          .historial-table th,
+          .historial-table td {
+            padding: 12px;
+            border: 1px solid #ddd;
+          }
+
+          .historial-table th {
+            background-color: #3f51b5;
+            color: white;
+            font-size: 15px;
+          }
+
+          .btn-cerrar {
+            display: block;
+            margin: 30px auto 0;
+            padding: 10px 25px;
+            background: #3f51b5;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.3s;
+          }
+
+          .btn-cerrar:hover {
+            background: #303f9f;
+          }
         </style>
       </head>
       <body>
@@ -878,7 +716,7 @@ function formatDate(date) {
 // ==========================================
 function guardarEntrada(fechaEntrada, numeroLegajo, credencialEntrada) {
   try {
-    const hoja = SpreadsheetApp.getActiveSheet();
+    const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Datos");
     
     if (!hoja) {
       throw new Error('No se pudo acceder a la hoja de cálculo activa');
@@ -987,7 +825,7 @@ function guardarEntrada(fechaEntrada, numeroLegajo, credencialEntrada) {
 
 // Función para buscar todas las filas con un legajo
 function buscarTodasLasFilasLegajo(legajo, columna) {
-  const hoja = SpreadsheetApp.getActiveSheet();
+  const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Datos");
   const ultimaFila = hoja.getLastRow();
   const filas = [];
   
@@ -1007,7 +845,7 @@ function buscarTodasLasFilasLegajo(legajo, columna) {
 //************ */
 // Nueva función para encontrar fila sin entrada
 function encontrarFilaSinEntrada(filas) {
-  const hoja = SpreadsheetApp.getActiveSheet();
+  const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Datos");
   
   // Recorrer filas de más reciente a más antigua (asumiendo que nuevas filas se añaden abajo)
   for (let i = filas.length - 1; i >= 0; i--) {
@@ -1027,7 +865,7 @@ function encontrarFilaSinEntrada(filas) {
 // ==========================================
 function guardarSalida(fechaSalida, numeroLegajo, division, credencialSalida) {
   try {
-    const hoja = SpreadsheetApp.getActiveSheet();
+    const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Datos");
     
     if (!hoja) {
       throw new Error('No se pudo acceder a la hoja de cálculo activa');
@@ -1077,26 +915,6 @@ function guardarSalida(fechaSalida, numeroLegajo, division, credencialSalida) {
       }
     }
 
-    // Marcar con '-' las entradas pendientes de este legajo (CRED ENTRADA y FECHA DE ENTRADA)
-    const lastRow = hoja.getLastRow();
-    if (lastRow >= 4) {
-      const rangoLegajos = hoja.getRange(4, 3, lastRow - 3, 1).getValues(); // Columna C (NUMERO LPU)
-      const rangoCredEntrada = hoja.getRange(4, 6, lastRow - 3, 1).getValues(); // Columna F (CRED ENTRADA)
-      const rangoFechaEntrada = hoja.getRange(4, 7, lastRow - 3, 1).getValues(); // Columna G (FECHA DE ENTRADA)
-      for (let i = 0; i < rangoLegajos.length; i++) {
-        if (rangoLegajos[i][0].toString() === numeroLegajo.toString()) {
-          // Si la celda de entrada está vacía, poner '-'
-          if (!rangoCredEntrada[i][0] || rangoCredEntrada[i][0] === "") {
-            editarCelda(i + 4, 6, "-"); // Col F
-          }
-          // Si la celda de fecha de entrada está vacía, poner '-'
-          if (!rangoFechaEntrada[i][0] || rangoFechaEntrada[i][0] === "") {
-            editarCelda(i + 4, 7, "-"); // Col G
-          }
-        }
-      }
-    }
-
     // Encontrar la próxima fila vacía desde B4 en adelante
     const fila = encontrarProximaFilaVacia();
     
@@ -1118,6 +936,30 @@ function guardarSalida(fechaSalida, numeroLegajo, division, credencialSalida) {
       message: 'Error al guardar salida: ' + error.message
     };
   }
+}
+
+
+/** VERIFICAR el funcionamiento de esta función (parece haber un código que guarda todo con fecha de hoy en lugar de usar guiones - ) */
+function cerrarEntradasPendientes(numeroLegajo) {
+    // Marcar con '-' las entradas pendientes de este legajo (CRED ENTRADA y FECHA DE ENTRADA)
+    const lastRow = hoja.getLastRow(); 
+    if (lastRow >= 4) {
+      const rangoLegajos = hoja.getRange(4, 3, lastRow - 3, 1).getValues(); // Columna C (NUMERO LPU)
+      const rangoCredEntrada = hoja.getRange(4, 6, lastRow - 3, 1).getValues(); // Columna F (CRED ENTRADA)
+      const rangoFechaEntrada = hoja.getRange(4, 7, lastRow - 3, 1).getValues(); // Columna G (FECHA DE ENTRADA)
+      for (let i = 0; i < rangoLegajos.length; i++) {
+        if (rangoLegajos[i][0].toString() === numeroLegajo.toString()) {
+          // Si la celda de entrada está vacía, poner '-'
+          if (!rangoCredEntrada[i][0] || rangoCredEntrada[i][0] === "") {
+            editarCelda(i + 4, 6, "-"); // Col F
+          }
+          // Si la celda de fecha de entrada está vacía, poner '-'
+          if (!rangoFechaEntrada[i][0] || rangoFechaEntrada[i][0] === "") {
+            editarCelda(i + 4, 7, "-"); // Col G
+          }
+        }
+      }
+    }
 }
 
 // ==========================================
@@ -1163,14 +1005,19 @@ function verificarSalidaDuplicada(hoja, numeroLegajo, fechaSalida, credencialSal
 
 // Función para editar desde el formulario (ya la tienes)
 function editarCelda(fila, columna, valor) {
-  SpreadsheetApp.getActiveSheet()
+   SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Datos")
     .getRange(fila, columna)
     .setValue(valor);
 }
 
-// Función para encontrar la próxima fila vacía desde B4 en adelante
 function encontrarProximaFilaVacia() {
-  const hoja = SpreadsheetApp.getActiveSheet();
+ return SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Datos").getRange("I2").getValue() + 4;
+}
+
+/** Eliminar si a función de arriba se ejecuta correctamente */
+// Función para encontrar la próxima fila vacía desde B4 en adelante
+/*function encontrarProximaFilaVacia() {
+  const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Datos");
   const rangoB = hoja.getRange('B4:B'); // Desde B4 hasta el final
   const valores = rangoB.getValues();
   
@@ -1183,7 +1030,7 @@ function encontrarProximaFilaVacia() {
   
   // Si no hay celdas vacías, devolver la siguiente fila después de los datos
   return hoja.getLastRow() + 1;
-}
+}*/
 
 // Función para buscar un legajo en una columna específica
 function buscarLegajoEnColumna(numeroLegajo, columna) {
@@ -1225,7 +1072,7 @@ function formatearFecha(fecha) {
 
  /** * * * * * * * * * * * * * * * **/
   function scrollToFila(fila) {
-     let hoja = SpreadsheetApp.getActiveSheet();
+     let hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Datos");
      hoja.setActiveSelection('B' + fila + ':G' + fila);
    }
 
@@ -1303,7 +1150,7 @@ function generarHtmlModalReemplazo(datosExistentes, datosNuevos, filaCoincidente
 
   function reemplazarDatosSalida(fila, datosNuevos) {
     try {
-      const hoja = SpreadsheetApp.getActiveSheet();
+      const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Datos");
       hoja.getRange(fila, 2).setValue(datosNuevos.fechaSalida);      // Columna B
       hoja.getRange(fila, 3).setValue(datosNuevos.numeroLegajo);     // Columna C
       hoja.getRange(fila, 4).setValue(datosNuevos.credencialSalida); // Columna D
@@ -1423,7 +1270,7 @@ function mostrarModalReemplazoEntrada(datosExistentes, datosNuevos, filaCoincide
 
 function reemplazarDatosEntrada(fila, datosNuevos) {
   try {
-    const hoja = SpreadsheetApp.getActiveSheet();
+    const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Datos");
     hoja.getRange(fila, 3).setValue(datosNuevos.numeroLegajo);     // Columna C
     hoja.getRange(fila, 6).setValue(datosNuevos.credencialEntrada); // Columna F
     hoja.getRange(fila, 7).setValue(datosNuevos.fechaEntrada);     // Columna G

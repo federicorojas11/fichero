@@ -97,6 +97,8 @@
         contenedor.innerHTML = `<div style="color:red;font-weight:bold;">${response?.message || 'Error en la consulta.'}</div>`;
         return;
     }
+    
+    mostrarDetallesCompletos(response.numeroLegajo);
 
     const estadoHTML = `
         <div style="background:#f8f9fa;border:1px solid #ccc;padding:15px;margin-bottom:20px;">
@@ -217,7 +219,9 @@
           return;
         }
         
-        LoaderNotification.show('Guardando datos de entrada...');
+        LoaderNotification.show(`Guardando datos de entrada... 
+        Legajo: ${numeroLegajo}`);
+        
         let inputLegajo = document.getElementById('numeroLegajoEntrada');
         inputLegajo.value = '';
         inputLegajo.focus();
@@ -290,10 +294,14 @@
           return;
         }
 
-       LoaderNotification.show('Guardando datos de salida...');
-        let inputLegajo = document.getElementById('numeroLegajoEntrada');
-        inputLegajo.value = '';
-        inputLegajo.focus();
+     LoaderNotification.show(`Guardando datos de entrada... 
+        Legajo: ${numeroLegajo}`);
+        
+       // Borrar solo legajo (conserva fecha, credencial y división)
+       let inputLegajo = document.getElementById('numeroLegajoSalida');
+       inputLegajo.value = '';
+       inputLegajo.focus();
+
         // Llamar función de Apps Script
         google.script.run
           .withSuccessHandler(onSalidaSuccess)
@@ -306,6 +314,8 @@
       function onSalidaSuccess(response) {
         LoaderNotification.hide();
         //console.log("onSalidaSuccess()")
+        google.script.run.cerrarEntradasPendientes(response.numeroLegajo);
+
           if (response && response.modal) {
           google.script.run.mostrarModalReemplazo(response.datosExistentes, response.datosNuevos, response.filaCoincidente);
           return;
@@ -313,10 +323,6 @@
 
         if (response.success) {
           showNotification('✅ ' + response.message, 'success');
-          // Borrar solo legajo y resetear jurisdicción (conserva fecha y credencial)
-          let inputLegajo = document.getElementById('numeroLegajoSalida');
-          inputLegajo.value = '';
-          inputLegajo.focus();
           } 
         else {
           showNotification('❌ ' + response.message, 'error');
