@@ -43,13 +43,30 @@ function consultarLegajo(numeroLegajo) {
     }
 
     if (resultados.length === 0) {
+      const estadoHTML = `
+        <div style="background:#f8f9fa;border:1px solid #ccc;padding:15px;margin-bottom:20px;">
+            <h3>Consulta realizada para legajo <strong>${numeroLegajo}</strong></h3>
+            <p><strong>Estado:</strong> 
+                <span style="padding:4px 8px;border-radius:3px;color:white;background:#dc3545;">
+                    NO REGISTRADO
+                </span>
+            </p>
+            <p><strong>Información:</strong> <p style="color:#6c757d;font-style:italic;">
+                Este legajo no tiene registros de salidas o entradas en la base de datos.
+            </p></p>
+          
+        </div>
+      `;
+      
       return {
         success: true,
         estado: "NO REGISTRADO",
         numeroLegajo,
-        message: `No se encontró ningún registro para el legajo ${numeroLegajo}`
+        message: `No se encontró ningún registro para el legajo ${numeroLegajo}`,
+        estadoHTML: estadoHTML
       };
     }
+
 
     // Determinar estado actual
     estadoActual = ultimoRegistro.fechaEntrada !== '-' ? 'DEVUELTO' : 'EN USO';
@@ -162,15 +179,11 @@ function generarModalDetalles(numeroLegajo) {
             overflow: hidden;
           }
           .header {
-            padding: 20px;
+            padding: 10px 20px;
             background: #3f51b5;
             color: white;
             display: flex;
             align-items: center;
-          }
-          .header-icon {
-            font-size: 36px;
-            margin-right: 15px;
           }
           .header-content h1 {
             margin: 0;
@@ -279,7 +292,6 @@ function generarModalDetalles(numeroLegajo) {
       <body>
         <div class="container">        
           <div class="header">
-            <div class="header-icon">📋</div>
             <div class="header-content">
               <h1>Estado del Legajo</h1>
               <p>Consulta realizada: <?= new Date().toLocaleString() ?></p>
@@ -343,7 +355,7 @@ function generarModalDetalles(numeroLegajo) {
           
           <? if (response.historial && response.historial.length > 0) { ?>
             <div class="historial-section">
-              <h3 class="historial-title">Historial Completo</h3>
+              <h3 class="historial-title">Historial</h3>
               <table class="historial-table">
                 <thead>
                   <tr>
@@ -402,8 +414,8 @@ function generarHtmlModal(response) {
   const estadoClass = response.estado === "EN ARCHIVO" ? 'estado-en-archivo' : 
                      response.estado === "EN SALIDA" ? 'estado-en-salida' : 
                      'estado-no-registrado';
-  const estadoIcon = response.estado === "EN ARCHIVO" ? '📁' : 
-                    response.estado === "EN SALIDA" ? '🚶' : '❓';
+  const estadoIcon = response.estado === "EN ARCHIVO" ? '🗃️' : 
+                    response.estado === "EN SALIDA" ? '🗂️' : '❓';
   const estadoText = response.estado === "EN ARCHIVO" ? 'En Archivo' : 
                     response.estado === "EN SALIDA" ? 'En Salida' : 'No Registrado';
 
@@ -433,18 +445,13 @@ function generarHtmlModal(response) {
 
           /* Encabezado principal */
           .header {
-            padding: 20px;
+            padding: 10px 20px;
             background: #3f51b5;
             color: white;
             display: flex;
             align-items: center;
             border-radius: 8px 8px 0 0;
             margin-bottom: 20px;
-          }
-
-          .header-icon {
-            font-size: 36px;
-            margin-right: 15px;
           }
 
           .header-content h1 {
@@ -593,8 +600,7 @@ function generarHtmlModal(response) {
 function generarContenidoModal(response, estadoClass, estadoIcon, estadoText) {
   let html = `
     <div class="header">
-      <div class="header-icon">📋</div>
-      <div class="header-content">
++      <div class="header-content">
         <h1>Estado del Legajo ${response.numeroLegajo}</h1>
         <p>Consulta realizada: ${new Date().toLocaleString()}</p>
       </div>
@@ -661,7 +667,7 @@ function generarContenidoModal(response, estadoClass, estadoIcon, estadoText) {
   if (response.historial && response.historial.length > 0) {
     html += `
       <div class="historial-section">
-        <h3 class="historial-title">Historial Completo</h3>
+        <h3 class="historial-title">Historial</h3>
         <table class="historial-table">
           <thead>
             <tr>
@@ -715,112 +721,82 @@ function formatDate(date) {
 // FUNCIÓN GUARDAR ENTRADA
 // ==========================================
 function guardarEntrada(fechaEntrada, numeroLegajo, credencialEntrada) {
-  try {
-    const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Datos");
-    
-    if (!hoja) {
-      throw new Error('No se pudo acceder a la hoja de cálculo activa');
-    }
+  return GestorEscrituraCoordinada.ejecutarConLock(function() {
+    try {
+      const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Datos");
+      
+      if (!hoja) {
+        throw new Error('No se pudo acceder a la hoja de cálculo activa');
+      }
 
-    // Validar parámetros obligatorios
-    if (!fechaEntrada || !numeroLegajo || !credencialEntrada) {
-      throw new Error('Todos los campos son obligatorios');
-    }
-    
-    // Validar formato de legajo (5-6 dígitos)
-    if (!/^\d{5,6}$/.test(numeroLegajo.toString())) {
-      throw new Error('El número de legajo debe tener entre 5 y 6 dígitos');
-    }
-    
-    // Validar formato de credencial (5 dígitos)
-    if (!/^\d{5}$/.test(credencialEntrada.toString())) {
-      throw new Error('La credencial debe tener exactamente 5 dígitos');
-    }
-    // Verificar duplicados/modificaciones
-    const resultadoVerificacion = verificarEntradaDuplicada(
-      hoja, numeroLegajo, fechaEntrada, credencialEntrada
-    );
+      // Validaciones (mantener igual que antes)
+      if (!fechaEntrada || !numeroLegajo || !credencialEntrada) {
+        throw new Error('Todos los campos son obligatorios');
+      }
+      
+      if (!/^\d{5,6}$/.test(numeroLegajo.toString())) {
+        throw new Error('El número de legajo debe tener entre 5 y 6 dígitos');
+      }
+      
+      if (!/^\d{5}$/.test(credencialEntrada.toString())) {
+        throw new Error('La credencial debe tener exactamente 5 dígitos');
+      }
+     
+      // Resto de la lógica igual que antes
+      const filasEncontradas = buscarTodasLasFilasLegajo(numeroLegajo, 3);
+      const filasSinEntrada = filasEncontradas.filter(fila => {
+        const credencial = hoja.getRange(fila, 6).getValue();
+        const fecha = hoja.getRange(fila, 7).getValue();
+        return !credencial && !fecha;
+      });
+      
+      if (filasSinEntrada.length === 0) {
+        const primerDato = 4;
+        const numFilas = hoja.getLastRow() - primerDato + 1;
+        const datos = hoja.getRange(primerDato, 2, numFilas > 0 ? numFilas : 0, 6).getValues();
 
-    if (resultadoVerificacion) {
-      if (resultadoVerificacion.tipo === "igual") {
+        let fila = datos.findIndex(row => row.every(v => v === ""));
+        if (fila !== -1) {
+          fila = fila + primerDato;
+        } else {
+          fila = hoja.getLastRow() + 1;
+        }
+
+        editarCelda(fila, 2, 'S/S');
+        editarCelda(fila, 3, numeroLegajo);
+        editarCelda(fila, 4, 'S/S');
+        editarCelda(fila, 5, 'S/S');
+        editarCelda(fila, 6, credencialEntrada);
+        editarCelda(fila, 7, formatearFecha(fechaEntrada));
+
+        scrollToFila(fila);
+
         return {
-          success: false,
-          message: `Ya existe una entrada registrada para el legajo ${numeroLegajo} con estos mismos datos en la fecha ${formatearFecha(fechaEntrada)}.`,
-          notification: 'info'
-        };
-      } else if (resultadoVerificacion.tipo === "diferente") {
-        return {
-          success: false,
-          modal: true,
-          message: "Ya existe una entrada para este legajo en la fecha seleccionada.",
-          datosExistentes: resultadoVerificacion.datosExistentes,
-          datosNuevos: {
-            fechaEntrada: formatearFecha(fechaEntrada),
-            numeroLegajo: numeroLegajo,
-            credencialEntrada: credencialEntrada
-          },
-          filaCoincidente: resultadoVerificacion.fila
+          success: true,
+          message: `No había salidas pendientes. Se registró la entrada como nueva fila (sin salida previa) para el legajo ${numeroLegajo}.`,
+          filasActualizadas: 1,
         };
       }
-    }
-    // Buscar TODAS las filas con este legajo
-    const filasEncontradas = buscarTodasLasFilasLegajo(numeroLegajo, 3); // Columna C = 3
       
-    // Filtrar filas sin entrada registrada
-    const filasSinEntrada = filasEncontradas.filter(fila => {
-      const credencial = hoja.getRange(fila, 6).getValue(); // Columna F
-      const fecha = hoja.getRange(fila, 7).getValue();      // Columna G
-      return !credencial && !fecha;
-    });
-    
-    if (filasSinEntrada.length === 0) {
-    // Obtener datos desde la fila 4 (inclusive) en adelante, columnas B-G
-    const primerDato = 4; // Fila de inicio
-    const numFilas = hoja.getLastRow() - primerDato + 1;
-    const datos = hoja.getRange(primerDato, 2, numFilas > 0 ? numFilas : 0, 6).getValues();
-
-    let fila = datos.findIndex(row => row.every(v => v === "")); // Índice dentro del rango
-    if (fila !== -1) {
-      fila = fila + primerDato; // Ajustar a número de fila real
-    } else {
-      fila = hoja.getLastRow() + 1; // Siguiente fila vacía después de la última con datos
+      filasSinEntrada.forEach(fila => {
+        editarCelda(fila, 6, credencialEntrada);
+        editarCelda(fila, 7, formatearFecha(fechaEntrada));
+      });
+      
+      scrollToFila(filasSinEntrada[filasSinEntrada.length - 1]);    
+      return {
+        success: true,
+        message: `Entrada registrada para ${filasSinEntrada.length} salida(s) del legajo ${numeroLegajo}`,
+        filasActualizadas: filasSinEntrada.length
+      };
+      
+    } catch (error) {
+      return {
+        success: false,
+        message: 'Error al guardar entrada: ' + error.message
+      };
     }
-
-    editarCelda(fila, 2, '-'); // FECHA RETIRO (B)
-    editarCelda(fila, 3, numeroLegajo); // NUMERO LPU (C)
-    editarCelda(fila, 4, '-'); // CRED RETIRA (D)
-    editarCelda(fila, 5, '-'); // DIVISION (E)
-    editarCelda(fila, 6, credencialEntrada); // CRED ENTRADA (F)
-    editarCelda(fila, 7, formatearFecha(fechaEntrada)); // FECHA DE ENTRADA (G)
-
-    scrollToFila(fila);
-
-    return {
-      success: true,
-      message: `No había salidas pendientes. Se registró la entrada como nueva fila (sin salida previa) para el legajo ${numeroLegajo}.`,
-      filasActualizadas: 1,
-    };
-  }
-    
-    // Registrar entrada en todas las filas pendientes
-    filasSinEntrada.forEach(fila => {
-      editarCelda(fila, 6, credencialEntrada); // Columna F - CRED ENTRADA
-      editarCelda(fila, 7, formatearFecha(fechaEntrada)); // Columna G - FECHA DE ENTRADA
-    });
-    
-    scrollToFila(filasSinEntrada[filasSinEntrada.length - 1]);    
-    return {
-      success: true,
-      message: `Entrada registrada para ${filasSinEntrada.length} salida(s) del legajo ${numeroLegajo}`,
-      filasActualizadas: filasSinEntrada.length
-    };
-    
-  } catch (error) {
-    return {
-      success: false,
-      message: 'Error al guardar entrada: ' + error.message
-    };
-  }
+  });
 }
 
 // Función para buscar todas las filas con un legajo
@@ -864,78 +840,60 @@ function encontrarFilaSinEntrada(filas) {
 // FUNCIÓN GUARDAR SALIDA
 // ==========================================
 function guardarSalida(fechaSalida, numeroLegajo, division, credencialSalida) {
-  try {
-    const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Datos");
-    
-    if (!hoja) {
-      throw new Error('No se pudo acceder a la hoja de cálculo activa');
-    }
+  return GestorEscrituraCoordinada.ejecutarConLock(function() {
+    try {
+      const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Datos");
+      
+      if (!hoja) {
+        throw new Error('No se pudo acceder a la hoja de cálculo activa');
+      }
 
-    // Validar parámetros obligatorios
-    if (!fechaSalida || !numeroLegajo || !division || !credencialSalida) {
-      throw new Error('Todos los campos son obligatorios');
-    }
-    
-    // Validar formato de legajo (5-6 dígitos)
-    if (!/^\d{5,6}$/.test(numeroLegajo.toString())) {
-      throw new Error('El número de legajo debe tener entre 5 y 6 dígitos');
-    }
-    
-    // Validar formato de credencial (5 dígitos)
-    if (!/^\d{5}$/.test(credencialSalida.toString())) {
-      throw new Error('La credencial debe tener exactamente 5 dígitos');
-    }
-    
-      // Verificar duplicados/modificaciones
-    const resultadoVerificacion = verificarSalidaDuplicada(
-      hoja, numeroLegajo, fechaSalida, credencialSalida, division
-    );
+      // Validaciones (mantener igual que antes)
+      if (!fechaSalida || !numeroLegajo || !division || !credencialSalida) {
+        throw new Error('Todos los campos son obligatorios');
+      }
+      
+      if (!/^\d{5,6}$/.test(numeroLegajo.toString())) {
+        throw new Error('El número de legajo debe tener entre 5 y 6 dígitos');
+      }
+      
+      if (!/^\d{5}$/.test(credencialSalida.toString())) {
+        throw new Error('La credencial debe tener exactamente 5 dígitos');
+      }
+      
+      // Resto de la lógica igual que antes
+      const resultadoVerificacion = verificarSalidaDuplicada(
+        hoja, numeroLegajo, fechaSalida, credencialSalida, division
+      );
 
-    if (resultadoVerificacion) {
-      if (resultadoVerificacion.tipo === "igual") {
+      if (resultadoVerificacion) {
         return {
           success: false,
-          message: `Ya existe una salida registrada para el legajo ${numeroLegajo} con estos mismos datos en la fecha ${formatearFecha(fechaSalida)}.`,
-          notification: 'info'
-        };
-      } else if (resultadoVerificacion.tipo === "diferente") {
-        return {
-          success: false,
-          modal: true,
-          message: "Ya existe una salida para este legajo en la fecha seleccionada.",
-          datosExistentes: resultadoVerificacion.datosExistentes,
-          datosNuevos: {
-            fechaSalida: formatearFecha(fechaSalida),
-            numeroLegajo: numeroLegajo,
-            credencialSalida: credencialSalida,
-            division: division
-          },
-          filaCoincidente: resultadoVerificacion.fila
+          message: resultadoVerificacion.message,
+          notification: 'warning'
         };
       }
-    }
 
-    // Encontrar la próxima fila vacía desde B4 en adelante
-    const fila = encontrarProximaFilaVacia();
-    
-    // Insertar datos en las columnas B, C, D, E
-    editarCelda(fila, 2, formatearFecha(fechaSalida)); // Columna B - FECHA RETIRO
-    editarCelda(fila, 3, numeroLegajo); // Columna C - NUMERO LPU
-    editarCelda(fila, 4, credencialSalida); // Columna D - CRED RETIRA
-    editarCelda(fila, 5, division); // Columna E - DIVISION
-    
-    scrollToFila(fila);    
-    return {
-      success: true,
-      message: `Salida registrada correctamente para el legajo ${numeroLegajo} en la fila ${fila}`
-    };
-    
-  } catch (error) {
-    return {
-      success: false,
-      message: 'Error al guardar salida: ' + error.message
-    };
-  }
+      const fila = encontrarProximaFilaVacia();
+      
+      editarCelda(fila, 2, formatearFecha(fechaSalida));
+      editarCelda(fila, 3, numeroLegajo);
+      editarCelda(fila, 4, credencialSalida);
+      editarCelda(fila, 5, division);
+      
+      scrollToFila(fila);    
+      return {
+        success: true,
+        message: `Salida registrada correctamente para el legajo ${numeroLegajo} en la fila ${fila}`
+      };
+      
+    } catch (error) {
+      return {
+        success: false,
+        message: 'Error al guardar salida: ' + error.message
+      };
+    }
+  });
 }
 
 
@@ -966,44 +924,49 @@ function cerrarEntradasPendientes(numeroLegajo) {
 // FUNCIONES AUXILIARES
 // ==========================================
 
-/** Busca si ya existe una salida para el legajo y fecha dados */
-function verificarSalidaDuplicada(hoja, numeroLegajo, fechaSalida, credencialSalida, division) {
-  const lastRow = hoja.getLastRow();
-  if (lastRow < 4) return null;
+  /** 
+   * Busca si ya existe una salida sin entrada para misma fecha y legajo
+   * Solo bloquea si encuentra salida pendiente el mismo día (sin entrada)
+   */
+  function verificarSalidaDuplicada(hoja, numeroLegajo, fechaSalida, credencialSalida, division) {
+    const lastRow = hoja.getLastRow();
+    if (lastRow < 4) return null;
 
-  const rangoLegajos = hoja.getRange(4, 3, lastRow - 3, 1).getValues(); // Col C
-  const rangoFechas = hoja.getRange(4, 2, lastRow - 3, 1).getValues();  // Col B
-  const rangoCred = hoja.getRange(4, 4, lastRow - 3, 1).getValues();    // Col D
-  const rangoDiv = hoja.getRange(4, 5, lastRow - 3, 1).getValues();     // Col E
+    // Obtener datos de todas las columnas necesarias
+    const rangoLegajos = hoja.getRange(4, 3, lastRow - 3, 1).getValues(); // Col C - NUMERO LPU
+    const rangoFechas = hoja.getRange(4, 2, lastRow - 3, 1).getValues();  // Col B - FECHA RETIRO
+    const rangoCredEntrada = hoja.getRange(4, 6, lastRow - 3, 1).getValues(); // Col F - CRED ENTRADA
+    const rangoFechaEntrada = hoja.getRange(4, 7, lastRow - 3, 1).getValues(); // Col G - FECHA ENTRADA
 
-  for (let i = 0; i < rangoLegajos.length; i++) {
-    if (
-      rangoLegajos[i][0].toString() === numeroLegajo.toString() &&
-      formatearFecha(rangoFechas[i][0]) === formatearFecha(fechaSalida)
-    ) {
-      const datosExistentes = {
-        fechaSalida: formatearFecha(rangoFechas[i][0]),
-        numeroLegajo: rangoLegajos[i][0],
-        credencialSalida: rangoCred[i][0],
-        division: rangoDiv[i][0]
-      };
-      const iguales =
-        datosExistentes.fechaSalida === formatearFecha(fechaSalida) &&
-        datosExistentes.numeroLegajo.toString() === numeroLegajo.toString() &&
-        datosExistentes.credencialSalida.toString() === credencialSalida.toString() &&
-        datosExistentes.division.toString() === division.toString();
-      return {
-        tipo: iguales ? "igual" : "diferente",
-        fila: i + 4,
-        datosExistentes: datosExistentes
-      };
+    for (let i = 0; i < rangoLegajos.length; i++) {
+      // Verificar si coincide legajo y fecha de salida
+      if (
+        rangoLegajos[i][0].toString() === numeroLegajo.toString() &&
+        formatearFecha(rangoFechas[i][0]) === formatearFecha(fechaSalida)
+      ) {
+        const credEntrada = rangoCredEntrada[i][0];
+        const fechaEntrada = rangoFechaEntrada[i][0];
+        
+        // ✅ NUEVA LÓGICA: Solo bloquear si esta salida NO tiene entrada registrada
+        if (!credEntrada && !fechaEntrada) {
+          // Encontró una salida sin entrada -> BLOQUEAR
+          return {
+            tipo: "salida_pendiente",
+            fila: i + 4,
+            message: `Ya existe una salida registrada para el legajo ${numeroLegajo} en la fecha ${formatearFecha(fechaSalida)} que aún no ha sido devuelta. Complete la entrada antes de registrar una nueva salida.`
+          };
+        }
+        // Si llega aquí, la salida ya tiene entrada -> CONTINUAR BUSCANDO
+      }
     }
+    
+    // ✅ No se encontró ninguna salida pendiente -> PERMITIR NUEVA SALIDA
+    return null;
   }
-  return null;
-}
 
 
-// Función para editar desde el formulario (ya la tienes)
+
+// Función para editar desde el formulario
 function editarCelda(fila, columna, valor) {
    SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Datos")
     .getRange(fila, columna)
@@ -1055,7 +1018,7 @@ function buscarLegajoEnColumna(numeroLegajo, columna) {
 
 // Función para formatear fecha a dd/mm/yyyy
 function formatearFecha(fecha) {
-  console.log("FECHA: ", fecha);
+  
   // Si viene como string del formulario HTML (yyyy-mm-dd)
   if (typeof fecha === 'string') {
     const partes = fecha.split('-');
@@ -1282,3 +1245,94 @@ function reemplazarDatosEntrada(fila, datosNuevos) {
     return { success: false, message: 'Error al reemplazar datos de entrada: ' + e.message };
   }
 }
+
+  const GestorEscrituraCoordinada = {
+  // Tiempo máximo de espera en milisegundos
+  TIMEOUT_MAX: 15000,
+  // Intervalo de verificación en milisegundos  
+  INTERVALO_VERIFICACION: 500,
+  
+  /**
+   * Obtiene un lock para escribir en la hoja
+   * ocupado
+   */
+  obtenerLock: function() {
+    const props = PropertiesService.getScriptProperties();
+    const ahora = new Date().getTime();
+    const lockExistente = props.getProperty('escritura_lock');
+    
+    if (!lockExistente) {
+      // No hay lock, creamos uno nuevo
+      props.setProperty('escritura_lock', ahora.toString());
+      return true;
+    }
+    
+    const tiempoLock = parseInt(lockExistente);
+    const tiempoTranscurrido = ahora - tiempoLock;
+    
+    // Si el lock es muy antiguo (más de 20 segundos), lo consideramos expirado
+    if (tiempoTranscurrido > 20000) {
+      props.setProperty('escritura_lock', ahora.toString());
+      return true;
+    }
+    
+    return false;
+  },
+  
+  /**
+   * Libera el lock de escritura
+   */
+  liberarLock: function() {
+    const props = PropertiesService.getScriptProperties();
+    props.deleteProperty('escritura_lock');
+  },
+  
+  /**
+   * Espera hasta obtener el lock o hasta timeout
+   * @returns {boolean} true si obtuvo el lock, false si timeout
+   */
+  esperarLock: function() {
+    const inicio = new Date().getTime();
+    
+    while (new Date().getTime() - inicio < this.TIMEOUT_MAX) {
+      if (this.obtenerLock()) {
+        return true;
+      }
+      // Esperar antes de intentar nuevamente
+      Utilities.sleep(this.INTERVALO_VERIFICACION);
+    }
+    
+    return false; // Timeout
+  },
+  
+  /**
+   * Ejecuta una función con lock exclusivo
+   * @param {Function} funcionEscritura - Función que realiza la escritura
+   * @returns {Object} Resultado de la función
+   */
+  ejecutarConLock: function(funcionEscritura) {
+    try {
+      // Intentar obtener el lock
+      if (!this.esperarLock()) {
+        return {
+          success: false,
+          message: 'El sistema está ocupado procesando otra solicitud. Intente nuevamente en unos segundos.'
+        };
+      }
+      
+      // Ejecutar la función de escritura
+      const resultado = funcionEscritura();
+      
+      return resultado;
+      
+    } catch (error) {
+      return {
+        success: false,
+        message: 'Error durante la escritura: ' + error.message
+      };
+    } finally {
+      // Siempre liberar el lock
+      this.liberarLock();
+    }
+  }
+};

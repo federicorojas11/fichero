@@ -78,7 +78,6 @@
         LoaderManager.showCircularLoader('Consultando...');
         google.script.run
         .withSuccessHandler(function(response) {
-          LoaderManager.hideLoaders();
           onConsultaSuccess(response);
             })
           .withFailureHandler(function(error) {
@@ -93,12 +92,43 @@
     const contenedor = document.getElementById('resultadoConsulta');
     contenedor.innerHTML = '';
 
+    LoaderManager.hideLoaders();
+
     if (!response || !response.success) {
         contenedor.innerHTML = `<div style="color:red;font-weight:bold;">${response?.message || 'Error en la consulta.'}</div>`;
         return;
     }
-    
-    mostrarDetallesCompletos(response.numeroLegajo);
+        
+      if (response.estado === "NO REGISTRADO") {
+        // Verificar que existe el elemento
+        const elemento = document.getElementById('resultadoConsulta');
+        if (!elemento) {
+            console.error('Elemento resultadosConsulta no encontrado');
+            return;
+        }
+        
+        // Usar estadoHTML del backend o generar fallback
+        if (response.estadoHTML) {
+            elemento.innerHTML = response.estadoHTML;
+        } else {
+            // Fallback con el mismo formato visual
+            elemento.innerHTML = `
+                <div style="background:#f8f9fa;border:1px solid #ccc;padding:15px;margin-bottom:20px;">
+                    <h3>Consulta realizada para legajo <strong>${response.numeroLegajo}</strong></h3>
+                    <p><strong>Estado:</strong> 
+                        <span style="padding:4px 8px;border-radius:3px;color:white;background:#dc3545;">
+                            NO REGISTRADO
+                        </span>
+                    </p>
+                    <p><strong>Información:</strong><p style="color:#6c757d;font-style:italic;">
+                        Este legajo no tiene registros de salidas o entradas en la base de datos.
+                    </p></p>
+                    
+                </div>
+            `;
+        }
+        return;
+    }
 
     const estadoHTML = `
         <div style="background:#f8f9fa;border:1px solid #ccc;padding:15px;margin-bottom:20px;">
@@ -179,62 +209,96 @@
 
      /** * * * * * * * * * * * * * * * **/
       // Funciones para guardar entrada
-      function guardarEntrada() {
-        //console.log("Función guardarEntrada() iniciada");
-        // Capturar valores del formulario
-        let fechaEntrada = document.getElementById('fechaEntrada').value;
-        let numeroLegajo = document.getElementById('numeroLegajoEntrada').value;
-        let credencialEntrada = document.getElementById('credencialEntrada').value;
-        
-      
-        // Validar cada campo
-        let isValid = true;
-        
-        if (!fechaEntrada) {
-          showError('fechaEntrada', 'Por favor, ingrese una fecha de entrada');
-          isValid = false;
-        } else if (new Date(fechaEntrada) > new Date(new Date().toDateString())) {
-          showError('fechaEntrada', 'La fecha de entrada no puede ser posterior a la fecha actual');
-          isValid = false;
-        }
-        
-        if (!numeroLegajo) {
-          showError('numeroLegajoEntrada', 'Por favor, ingrese un número de legajo');
-          isValid = false;
-        } else if (/\./.test(numeroLegajo.toString())) {
-          // Si contiene punto, lo eliminamos
-          numeroLegajo = numeroLegajo.toString().replace(/\./g, '');
-        } else if(numeroLegajo.toString().length < 5 || numeroLegajo.toString().length > 6) {
-          showError('numeroLegajoEntrada', 'El número ingresado debe tener entre 5 y 6 números');
-          isValid = false;
-        }
-        
-        if (!credencialEntrada || credencialEntrada.length != 5) {
-          showError('credencialEntrada', 'Por favor, ingrese una credencial');
-          isValid = false;
-        }
-        
-        // Si hay errores, no continuar
-        if (!isValid) {
-          return;
-        }
-        
-        LoaderNotification.show(`Guardando datos de entrada... 
-        Legajo: ${numeroLegajo}`);
-        
-        let inputLegajo = document.getElementById('numeroLegajoEntrada');
-        inputLegajo.value = '';
-        inputLegajo.focus();
-        // Llamar función de Apps Script
-        google.script.run
-          .withSuccessHandler(onEntradaSuccess)
-          .withFailureHandler(onError)
-          .guardarEntrada(fechaEntrada, numeroLegajo, credencialEntrada);
-      }
+     function guardarEntrada() {
+    // Capturar valores del formulario
+    let fechaEntrada = document.getElementById('fechaEntrada').value;
+    let numeroLegajo = document.getElementById('numeroLegajoEntrada').value;
+    let credencialEntrada = document.getElementById('credencialEntrada').value;
+    
+    // Validar cada campo
+    let isValid = true;
+    
+    if (!fechaEntrada) {
+        showError('fechaEntrada', 'Por favor, ingrese una fecha de entrada');
+        isValid = false;
+    } else if (new Date(fechaEntrada) > new Date(new Date().toDateString())) {
+        showError('fechaEntrada', 'La fecha de entrada no puede ser posterior a la fecha actual');
+        isValid = false;
+    }
+    
+    if (!numeroLegajo) {
+        showError('numeroLegajoEntrada', 'Por favor, ingrese un número de legajo');
+        isValid = false;
+    } else if (/\./.test(numeroLegajo.toString())) {
+        // Si contiene punto, lo eliminamos
+        numeroLegajo = numeroLegajo.toString().replace(/\./g, '');
+    } else if(numeroLegajo.toString().length < 5 || numeroLegajo.toString().length > 6) {
+        showError('numeroLegajoEntrada', 'El número ingresado debe tener entre 5 y 6 números');
+        isValid = false;
+    }
+    
+    if (!credencialEntrada || credencialEntrada.length != 5) {
+        showError('credencialEntrada', 'Por favor, ingrese una credencial');
+        isValid = false;
+    }
+    
+    // Si hay errores, no continuar
+    if (!isValid) {
+        return;
+    }
+    
+    // Mostrar el loader y guardar su ID para este proceso específico
+    const loaderId = GestorLoadersLegajo.mostrar(numeroLegajo);
+    
+    let inputLegajo = document.getElementById('numeroLegajoEntrada');
+    inputLegajo.value = '';
+    inputLegajo.focus();
+    
+    // Llamar función de Apps Script
+    google.script.run
+        .withSuccessHandler(function(response) {
+            // Actualizar el estado del loader según el resultado
+            if (response.success) {
+                GestorLoadersLegajo.actualizar(loaderId, 'success');
+            } else {
+                GestorLoadersLegajo.actualizar(loaderId, 'error');
+            }
+            GestorLoadersLegajo.remover(loaderId);
+            
+            // Lógica original de onEntradaSuccess
+            if (response && response.modal) {
+                google.script.run.mostrarModalReemplazoEntrada(response.datosExistentes, response.datosNuevos, response.filaCoincidente);
+                return;
+            }
+            if (response.success) {
+                showNotification('✅ ' + response.message, 'success');
+            } else {
+                showNotification('❌ ' + response.message, 'error');
+            }
+        })
+        .withFailureHandler(function(error) {
+            // En caso de error, mostrar loader en rojo y removerlo
+            GestorLoadersLegajo.actualizar(loaderId, 'error');
+            GestorLoadersLegajo.remover(loaderId);
+        })
+        .guardarEntrada(fechaEntrada, numeroLegajo, credencialEntrada);
+    }
+
 
      // Función de éxito para ENTRADA
       function onEntradaSuccess(response) {
-        LoaderNotification.hide();
+
+      // Actualizar Loader según respuesta
+      if (window.currentLoaderId) {
+          if (response.success) {
+              GestorLoadersLegajo.actualizar(window.currentLoaderId, 'success');
+          } else {
+              GestorLoadersLegajo.actualizar(window.currentLoaderId, 'error');
+          }
+          GestorLoadersLegajo.remover(window.currentLoaderId);
+          window.currentLoaderId = null;
+      }
+      
         if (response && response.modal) {
           google.script.run.mostrarModalReemplazoEntrada(response.datosExistentes, response.datosNuevos, response.filaCoincidente);
           return;
@@ -249,65 +313,87 @@
      /** * * * * * * * * * * * * * * * **/
       // Funciones para guardar salida
       function guardarSalida() {
-        //console.log("Función guardarSalida() iniciada");
+    // Capturar valores del formulario
+    let fechaSalida = document.getElementById('fechaSalida').value;
+    let numeroLegajo = document.getElementById('numeroLegajoSalida').value;
+    let division = document.getElementById('divisionSalida').value;
+    let credencialSalida = document.getElementById('credencialSalida').value;
+    
+    // Validar cada campo
+    let isValid = true;
+    
+    if (!fechaSalida) {
+        showError('fechaSalida', 'Por favor, ingrese una fecha de salida');
+        isValid = false;
+    } else if (new Date(fechaSalida) > new Date(new Date().toDateString())) {
+        showError('fechaSalida', 'La fecha de salida no puede ser posterior a la fecha actual');
+        isValid = false;
+    }
+    
+    if (!numeroLegajo) {
+        showError('numeroLegajoSalida', 'Por favor, ingrese un número de legajo');
+        isValid = false;
+    } else if (/\./.test(numeroLegajo.toString())) {
+        // Si contiene punto, lo eliminamos
+        numeroLegajo = numeroLegajo.toString().replace(/\./g, '');
+    } else if(numeroLegajo.toString().length < 5 || numeroLegajo.toString().length > 6) {
+        showError('numeroLegajoSalida', 'El número ingresado debe tener entre 5 y 6 números');
+        isValid = false;
+    }
+    
+    if (!division || division === '--Seleccione división--') {
+        showError('divisionSalida', 'Por favor, ingrese una división de destino');
+        isValid = false;
+    }
+    
+    if (!credencialSalida || credencialSalida.length != 5) {
+        showError('credencialSalida', 'Por favor, ingrese una credencial');
+        isValid = false;
+    }
+    
+    // Si hay errores, no continuar
+    if (!isValid) {
+        return;
+    }
 
-        // Capturar valores del formulario
-        let fechaSalida = document.getElementById('fechaSalida').value;
-        let numeroLegajo = document.getElementById('numeroLegajoSalida').value;
-        let division = document.getElementById('divisionSalida').value;
-        let credencialSalida = document.getElementById('credencialSalida').value;
-        
-        // Validar cada campo
-        let isValid = true;
-        
-        if (!fechaSalida) {
-          showError('fechaSalida', 'Por favor, ingrese una fecha de salida');
-          isValid = false;
-        } else if (new Date(fechaEntrada) > new Date(new Date().toDateString())) {
-          showError('fechaEntrada', 'La fecha de salida no puede ser posterior a la fecha actual');
-          isValid = false;
-        }
-        
-        if (!numeroLegajo) {
-          showError('numeroLegajoSalida', 'Por favor, ingrese un número de legajo');
-          isValid = false;
-        } else if (/\./.test(numeroLegajo.toString())) {
-          // Si contiene punto, lo eliminamos
-          numeroLegajo = numeroLegajo.toString().replace(/\./g, '');
-        } else if(numeroLegajo.toString().length < 5 || numeroLegajo.toString().length > 6) {
-          showError('numeroLegajoSalida', 'El número ingresado debe tener entre 5 y 6 números');
-          isValid = false;
-        }
-        
-        if (!division || division === '--Seleccione división--') {
-          showError('divisionSalida', 'Por favor, ingrese una división de destino');
-          isValid = false;
-        }
-        
-        if (!credencialSalida || credencialSalida.length != 5) {
-          showError('credencialSalida', 'Por favor, ingrese una credencial');
-          isValid = false;
-        }
-        
-        // Si hay errores, no continuar
-        if (!isValid) {
-          return;
-        }
+    // Mostrar el loader y guardar su ID para este proceso específico
+    const loaderId = GestorLoadersLegajo.mostrar(numeroLegajo);
+    
+    // Borrar solo legajo (conserva fecha, credencial y división)
+    let inputLegajo = document.getElementById('numeroLegajoSalida');
+    inputLegajo.value = '';
+    inputLegajo.focus();
 
-     LoaderNotification.show(`Guardando datos de entrada... 
-        Legajo: ${numeroLegajo}`);
-        
-       // Borrar solo legajo (conserva fecha, credencial y división)
-       let inputLegajo = document.getElementById('numeroLegajoSalida');
-       inputLegajo.value = '';
-       inputLegajo.focus();
+    // Llamar función de Apps Script
+    google.script.run
+        .withSuccessHandler(function(response) {
+            // Actualizar el estado del loader según el resultado
+            if (response.success) {
+                GestorLoadersLegajo.actualizar(loaderId, 'success');
+            } else {
+                GestorLoadersLegajo.actualizar(loaderId, 'error');
+            }
+            GestorLoadersLegajo.remover(loaderId);
+            
+            // Lógica original de onSalidaSuccess
+            if (response && response.modal) {
+                google.script.run.mostrarModalReemplazoSalida(response.datosExistentes, response.datosNuevos, response.filaCoincidente);
+                return;
+            }
+            if (response.success) {
+                showNotification('✅ ' + response.message, 'success');
+            } else {
+                showNotification('❌ ' + response.message, 'error');
+            }
+        })
+        .withFailureHandler(function(error) {
+            // En caso de error, mostrar loader en rojo y removerlo
+            GestorLoadersLegajo.actualizar(loaderId, 'error');
+            GestorLoadersLegajo.remover(loaderId);
+        })
+        .guardarSalida(fechaSalida, numeroLegajo, division, credencialSalida);
+    }
 
-        // Llamar función de Apps Script
-        google.script.run
-          .withSuccessHandler(onSalidaSuccess)
-          .withFailureHandler(onError)
-          .guardarSalida(fechaSalida, numeroLegajo, division, credencialSalida);
-      }
 
     
       // Función de éxito para SALIDA

@@ -4,8 +4,15 @@
   <base target="_top">
   <!-- Estilos importados desde _css.html -->
   <?!= include('_css'); ?>
+      <!-- Javascript importado -->  
+  <?!= include('_js'); ?>
+  <?!= include('_spinner'); ?>
+  <?!= include('_spinner_notification'); ?>
  </head>
 <body>
+
+
+
   <div class="tab">
     <button class="tablinks active" onclick="openTab(event, 'entrada')">Entrada</button>
     <button class="tablinks" onclick="openTab(event, 'salida')">Salida</button>
@@ -141,17 +148,7 @@
     </div>
   </div>
 
-  <!-- Loader de notificación -->
-  <div id="loader-notification">
-    <div class="loader-content">
-      <div class="loader-spinner"></div>
-      <div class="loader-text" id="loaderMessage">Procesando datos...</div>
-    </div>
-  </div>
-
-  <!-- Javascript y css importados -->  
-  <?!= include('_js'); ?>
-  <?!= include('_spinner'); ?>
-  <?!= include('_spinner_notification'); ?>
+  <!-- Loader de Entrada y Salida -->
+  <div id="loaders-container"></div>
 </body>
 </html>
